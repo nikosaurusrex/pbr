@@ -1,10 +1,18 @@
-#ifndef VULKAN_RENDERER_H
-#define VULKAN_RENDERER_H
+#pragma once
 
 #include <vulkan/vulkan.h>
 
-VkInstance create_vulkan_instance(const char *name, int version,
-                                  const char **extensions, int extensions_count,
-                                  const char **layers, int layers_count);
+#include <GLFW/glfw3.h>
 
-#endif
+#include "data_structures.h"
+
+VkInstance create_vulkan_instance(const char *name, int version, Array<const char *> extensions, Array<const char *> layers);
+void       destroy_vulkan_instance(VkInstance instance);
+
+VkSurfaceKHR create_surface(VkInstance instance, GLFWwindow *glfw_window);
+void         destroy_surface(VkInstance instance, VkSurfaceKHR surface);
+
+VkPhysicalDevice find_compatible_device(VkInstance instance, Array<const char *> required_extensions);
+
+VkDevice create_logical_device(VkPhysicalDevice pdevice, VkSurfaceKHR surface, Array<const char *> extensions, Array<const char *> layers);
+void     destroy_device(VkDevice ldevice);
