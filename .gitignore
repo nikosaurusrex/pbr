@@ -1,0 +1,7 @@
+.vs
+bin
+*.sln
+*vcxproj*
+out.png
+.vscode
+imgui.ini
