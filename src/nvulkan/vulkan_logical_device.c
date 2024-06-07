@@ -4,16 +4,17 @@
 static VkAllocationCallbacks *g_allocator = 0;
 
 VulkanDevice
-logical_device_create(VkSurfaceKHR surface, VkPhysicalDevice pdevice, array<const char *> extensions, array<const char *> layers)
+logical_device_create(VkSurfaceKHR surface, VkPhysicalDevice pdevice, const char **extensions, uint32_t extension_count,
+                      const char **layers, uint32_t layer_count)
 {
     VkPhysicalDeviceMemoryProperties memory_properties;
     vkGetPhysicalDeviceMemoryProperties(pdevice, &memory_properties);
 
-    uint32_t queue_families_count;
-    vkGetPhysicalDeviceQueueFamilyProperties(pdevice, &queue_families_count, 0);
-    array<VkQueueFamilyProperties> queue_families;
-    queue_families.resize(queue_families_count);
-    vkGetPhysicalDeviceQueueFamilyProperties(pdevice, &queue_families_count, queue_families.data());
+    uint32_t queue_family_count;
+    vkGetPhysicalDeviceQueueFamilyProperties(pdevice, &queue_family_count, 0);
+
+    VkQueueFamilyProperties *queue_families = malloc(queue_family_count * sizeof(VkQueueFamilyProperties));
+    vkGetPhysicalDeviceQueueFamilyProperties(pdevice, &queue_family_count, queue_families);
 
     // Setup device queues
     VkDeviceQueueCreateInfo queue_create_infos[1];
@@ -21,11 +22,11 @@ logical_device_create(VkSurfaceKHR surface, VkPhysicalDevice pdevice, array<cons
     float queue_priority = 1.0f;
 
     uint32_t graphics_index = ~0u;
-    for (uint32_t i = 0; i < queue_families_count; ++i) {
+    for (uint32_t i = 0; i < queue_family_count; ++i) {
         VkQueueFamilyProperties queue_family = queue_families[i];
 
         if ((queue_family.queueFlags & VK_QUEUE_GRAPHICS_BIT)) {
-            VkBool32 present_supported = false;
+            int present_supported = VK_FALSE;
             vkGetPhysicalDeviceSurfaceSupportKHR(pdevice, i, surface, &present_supported);
 
             if (!present_supported) {
@@ -44,15 +45,15 @@ logical_device_create(VkSurfaceKHR surface, VkPhysicalDevice pdevice, array<cons
         }
     }
 
-    VkPhysicalDeviceFeatures features_core = {};
+    VkPhysicalDeviceFeatures features_core = {0};
 
     VkDeviceCreateInfo create_info      = {VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO};
     create_info.queueCreateInfoCount    = ARR_COUNT(queue_create_infos);
     create_info.pQueueCreateInfos       = queue_create_infos;
-    create_info.enabledExtensionCount   = extensions.size();
-    create_info.ppEnabledExtensionNames = extensions.data();
-    create_info.enabledLayerCount       = layers.size();
-    create_info.ppEnabledLayerNames     = layers.data();
+    create_info.enabledExtensionCount   = extension_count;
+    create_info.ppEnabledExtensionNames = extensions;
+    create_info.enabledLayerCount       = layer_count;
+    create_info.ppEnabledLayerNames     = layers;
     create_info.pEnabledFeatures        = &features_core;
 
     VkDevice handle;
@@ -66,6 +67,7 @@ logical_device_create(VkSurfaceKHR surface, VkPhysicalDevice pdevice, array<cons
     ldevice.graphics_queue       = graphics_queue;
     ldevice.graphics_queue_index = graphics_index;
 
+    free(queue_families);
     return ldevice;
 }
 

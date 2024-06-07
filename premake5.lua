@@ -35,7 +35,7 @@ project "raytracer"
 		"src/**.h",
 		"src/**.cpp",
 		"src/nvulkan/**.h",
-		"src/nvulkan/**.cpp",
+		"src/nvulkan/**.c",
 	}
 
   includedirs
