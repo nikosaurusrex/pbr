@@ -250,8 +250,8 @@ swapchain_present(VulkanSwapchain *sc, VulkanCommandBuffers *cmd_bufs)
     submitInfo.waitSemaphoreCount        = 1;
     submitInfo.pSignalSemaphores         = &sc->write_semaphores[sc->current_semaphore];
     submitInfo.signalSemaphoreCount      = 1;
-    submitInfo.pCommandBuffers           = cmd_bufs->handles;
-    submitInfo.commandBufferCount        = cmd_bufs->count;
+    submitInfo.pCommandBuffers           = &cmd_bufs->handles[current_image];
+    submitInfo.commandBufferCount        = 1;
     submitInfo.pNext                     = 0;
 
     vkQueueSubmit(ldevice->graphics_queue, 1, &submitInfo, sc->fences[current_image]);
