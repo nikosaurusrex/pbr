@@ -16,10 +16,11 @@
     }
 
 #ifndef __cplusplus
-typedef struct VulkanDevice       VulkanDevice;
-typedef struct VulkanSwapchain    VulkanSwapchain;
-typedef struct VulkanImage        VulkanImage;
-typedef struct VulkanFramebuffers VulkanFramebuffers;
+typedef struct VulkanDevice         VulkanDevice;
+typedef struct VulkanSwapchain      VulkanSwapchain;
+typedef struct VulkanImage          VulkanImage;
+typedef struct VulkanFramebuffers   VulkanFramebuffers;
+typedef struct VulkanCommandBuffers VulkanCommandBuffers;
 #else
 extern "C" {
 #endif
@@ -39,7 +40,6 @@ struct VulkanSwapchain {
 
     uint32_t image_count;
     uint32_t semaphore_count;
-    uint32_t fence_count;
 
     VkImage              *images;
     VkImageView          *image_views;
@@ -50,6 +50,8 @@ struct VulkanSwapchain {
 
     uint32_t width;
     uint32_t height;
+    uint32_t current_semaphore;
+    uint32_t current_image;
 };
 
 struct VulkanImage {
@@ -60,8 +62,13 @@ struct VulkanImage {
 };
 
 struct VulkanFramebuffers {
-    VkFramebuffer *framebuffers;
+    VkFramebuffer *handles;
     uint32_t       count;
+};
+
+struct VulkanCommandBuffers {
+    VkCommandBuffer *handles;
+    uint32_t         count;
 };
 
 VkInstance vulkan_instance_create(const char *name, int version, const char **extensions, uint32_t extension_count, const char **layers,
@@ -81,6 +88,8 @@ VulkanSwapchain swapchain_create(VkSurfaceKHR surface, VkPhysicalDevice pdevice,
                                  uint32_t image_count);
 void            swapchain_update(VulkanSwapchain *sc, uint8_t vsync);
 void            swapchain_destroy(VulkanSwapchain *sc);
+uint32_t        swapchain_acquire(VulkanSwapchain *sc);
+void            swapchain_present(VulkanSwapchain *sc, VulkanCommandBuffers *cmd_bufs);
 
 VkCommandPool command_pool_create(VulkanDevice *ldevice);
 void          command_pool_destroy(VulkanDevice *ldevice, VkCommandPool cmd_pool);
@@ -88,7 +97,11 @@ void          command_pool_destroy(VulkanDevice *ldevice, VkCommandPool cmd_pool
 VkCommandBuffer command_buffer_allocate(VulkanDevice *ldevice, VkCommandPool cmd_pool);
 void            command_buffer_free(VulkanDevice *ldevice, VkCommandPool cmd_pool, VkCommandBuffer cmd_buf);
 void            command_buffer_begin(VkCommandBuffer cmd_buf);
+void            command_buffer_end(VkCommandBuffer cmd_buf);
 void            command_buffer_submit(VulkanDevice *ldevice, VkCommandBuffer cmd_buf);
+
+VulkanCommandBuffers command_buffers_allocate(VulkanDevice *ldevice, VkCommandPool cmd_pool, uint32_t count);
+void                 command_buffers_free(VulkanDevice *ldevice, VkCommandPool cmd_pool, VulkanCommandBuffers *cmd_bufs);
 
 VulkanImage image_create(VkPhysicalDevice pdevice, VulkanDevice *ldevice, VkFormat format, uint32_t width, uint32_t height,
                          uint32_t mip_levels, VkImageAspectFlags aspect_mask, VkImageUsageFlags usage);

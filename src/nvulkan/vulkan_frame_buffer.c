@@ -18,13 +18,13 @@ frame_buffers_create(VulkanSwapchain *sc, VkRenderPass render_pass, VulkanImage 
     create_info.height                  = sc->height;
     create_info.layers                  = 1;
 
-    framebuffers.count        = sc->image_count;
-    framebuffers.framebuffers = malloc(framebuffers.count * sizeof(VkFramebuffer));
+    framebuffers.count   = sc->image_count;
+    framebuffers.handles = malloc(framebuffers.count * sizeof(VkFramebuffer));
     for (uint32_t i = 0; i < framebuffers.count; ++i) {
         attachments[0] = sc->image_views[i];
         attachments[1] = depth_image->view;
 
-        vkCreateFramebuffer(sc->ldevice->handle, &create_info, g_allocator, &framebuffers.framebuffers[i]);
+        vkCreateFramebuffer(sc->ldevice->handle, &create_info, g_allocator, &framebuffers.handles[i]);
     }
 
     return framebuffers;
@@ -34,8 +34,8 @@ void
 frame_buffers_destroy(VulkanDevice *ldevice, VulkanFramebuffers *framebuffers)
 {
     for (uint32_t i = 0; i < framebuffers->count; ++i) {
-        vkDestroyFramebuffer(ldevice->handle, framebuffers->framebuffers[i], g_allocator);
+        vkDestroyFramebuffer(ldevice->handle, framebuffers->handles[i], g_allocator);
     }
 
-    free(framebuffers->framebuffers);
+    free(framebuffers->handles);
 };

@@ -24,8 +24,14 @@ void
 command_buffer_begin(VkCommandBuffer cmd_buf)
 {
     VkCommandBufferBeginInfo begin_info = {VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO};
-    begin_info.flags                    = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT; // @Todo make parameter
+    begin_info.flags                    = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
     VK_CHECK(vkBeginCommandBuffer(cmd_buf, &begin_info));
+}
+
+void
+command_buffer_end(VkCommandBuffer cmd_buf)
+{
+    VK_CHECK(vkEndCommandBuffer(cmd_buf));
 }
 
 void
@@ -39,4 +45,28 @@ command_buffer_submit(VulkanDevice *ldevice, VkCommandBuffer cmd_buf)
 
     vkQueueSubmit(ldevice->graphics_queue, 1, &submit_info, (VkFence){0});
     vkQueueWaitIdle(ldevice->graphics_queue);
+}
+
+VulkanCommandBuffers
+command_buffers_allocate(VulkanDevice *ldevice, VkCommandPool cmd_pool, uint32_t count)
+{
+    VulkanCommandBuffers cmd_bufs = {0};
+    cmd_bufs.count                = count;
+    cmd_bufs.handles              = malloc(count * sizeof(VkCommandBuffer));
+
+    VkCommandBufferAllocateInfo alloc_info = {VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO};
+    alloc_info.commandBufferCount          = count;
+    alloc_info.commandPool                 = cmd_pool;
+    alloc_info.level                       = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+
+    VK_CHECK(vkAllocateCommandBuffers(ldevice->handle, &alloc_info, cmd_bufs.handles));
+
+    return cmd_bufs;
+}
+
+void
+command_buffers_free(VulkanDevice *ldevice, VkCommandPool cmd_pool, VulkanCommandBuffers *cmd_bufs)
+{
+    vkFreeCommandBuffers(ldevice->handle, cmd_pool, cmd_bufs->count, cmd_bufs->handles);
+    free(cmd_bufs->handles);
 }

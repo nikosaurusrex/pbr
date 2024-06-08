@@ -39,8 +39,7 @@ swapchain_create(VkSurfaceKHR surface, VkPhysicalDevice pdevice, VulkanDevice *l
     swapchain_update(&swapchain, 1);
 
     // Create fences
-    swapchain.fence_count = swapchain.image_count;
-    swapchain.fences      = malloc(swapchain.fence_count * sizeof(VkFence));
+    swapchain.fences = malloc(swapchain.image_count * sizeof(VkFence));
     for (uint32_t i = 0; i < swapchain.image_count; ++i) {
         VkFenceCreateInfo create_info = {VK_STRUCTURE_TYPE_FENCE_CREATE_INFO};
         create_info.flags             = VK_FENCE_CREATE_SIGNALED_BIT;
@@ -71,8 +70,8 @@ swapchain_update(VulkanSwapchain *sc, uint8_t vsync)
 
     assert(surface_capabilities.currentExtent.width != (uint32_t)(-1));
     VkExtent2D extent = surface_capabilities.currentExtent;
-    sc->width = extent.width;
-    sc->height = extent.height;
+    sc->width         = extent.width;
+    sc->height        = extent.height;
 
     // Select present mode
     uint32_t present_mode_count;
@@ -197,9 +196,11 @@ swapchain_destroy(VulkanSwapchain *sc)
 
     for (uint32_t i = 0; i < sc->image_count; ++i) {
         vkDestroyImageView(ldevice->handle, sc->image_views[i], g_allocator);
+        vkDestroyFence(ldevice->handle, sc->fences[i], g_allocator);
     }
     free(sc->images);
     free(sc->image_views);
+    free(sc->fences);
     free(sc->barriers);
 
     for (uint32_t i = 0; i < sc->image_count + 1; ++i) {
@@ -209,10 +210,60 @@ swapchain_destroy(VulkanSwapchain *sc)
     free(sc->read_semaphores);
     free(sc->write_semaphores);
 
-    for (uint32_t i = 0; i < sc->fence_count; ++i) {
-        vkDestroyFence(ldevice->handle, sc->fences[i], g_allocator);
-    }
-    free(sc->fences);
-
     vkDestroySwapchainKHR(ldevice->handle, sc->handle, g_allocator);
+}
+
+uint32_t
+swapchain_acquire(VulkanSwapchain *sc)
+{
+    // @Todo check for resize and destroy and recreate swapchain
+    VkDevice ldevice = sc->ldevice->handle;
+
+    VkSemaphore sempahore = sc->read_semaphores[sc->current_semaphore];
+
+    VkResult result = vkAcquireNextImageKHR(ldevice, sc->handle, UINT64_MAX, sempahore, 0, &sc->current_image);
+
+    if (result != VK_SUCCESS) {
+        // @Todo handle resize
+    }
+
+    do {
+        result = vkWaitForFences(ldevice, 1, &sc->fences[sc->current_image], VK_TRUE, UINT64_MAX);
+    } while (result != VK_SUCCESS);
+
+    return sc->current_image;
+}
+
+void
+swapchain_present(VulkanSwapchain *sc, VulkanCommandBuffers *cmd_bufs)
+{
+    VulkanDevice *ldevice       = sc->ldevice;
+    uint32_t      current_image = sc->current_image;
+
+    // @Todo move this
+    vkResetFences(ldevice->handle, 1, &sc->fences[current_image]);
+
+    VkPipelineStageFlags wait_stage_mask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+    VkSubmitInfo         submitInfo      = {VK_STRUCTURE_TYPE_SUBMIT_INFO};
+    submitInfo.pWaitDstStageMask         = &wait_stage_mask;
+    submitInfo.pWaitSemaphores           = &sc->read_semaphores[sc->current_semaphore];
+    submitInfo.waitSemaphoreCount        = 1;
+    submitInfo.pSignalSemaphores         = &sc->write_semaphores[sc->current_semaphore];
+    submitInfo.signalSemaphoreCount      = 1;
+    submitInfo.pCommandBuffers           = cmd_bufs->handles;
+    submitInfo.commandBufferCount        = cmd_bufs->count;
+    submitInfo.pNext                     = 0;
+
+    vkQueueSubmit(ldevice->graphics_queue, 1, &submitInfo, sc->fences[current_image]);
+
+    VkPresentInfoKHR present_info   = {VK_STRUCTURE_TYPE_PRESENT_INFO_KHR};
+    present_info.swapchainCount     = 1;
+    present_info.pSwapchains        = &sc->handle;
+    present_info.waitSemaphoreCount = 1;
+    present_info.pWaitSemaphores    = &sc->write_semaphores[sc->current_semaphore];
+    present_info.pImageIndices      = &sc->current_image;
+
+    vkQueuePresentKHR(ldevice->graphics_queue, &present_info);
+
+    sc->current_semaphore = (sc->current_semaphore + 1) % sc->semaphore_count;
 }
