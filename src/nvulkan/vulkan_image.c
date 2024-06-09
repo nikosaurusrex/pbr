@@ -25,7 +25,7 @@ image_create(VkPhysicalDevice pdevice, VulkanDevice *ldevice, VkFormat format, u
 {
     // Create image handle
     VulkanImage image = {0};
-    image.format = format;
+    image.format      = format;
 
     VkImageCreateInfo image_info = {VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO};
     image_info.imageType         = VK_IMAGE_TYPE_2D;
@@ -57,10 +57,10 @@ image_create(VkPhysicalDevice pdevice, VulkanDevice *ldevice, VkFormat format, u
 
     // Create image view
 
-    VkImageViewCreateInfo view_info = {VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO};
-    view_info.image                 = image.handle;
-    view_info.viewType              = VK_IMAGE_VIEW_TYPE_2D;
-    view_info.format                = format;
+    VkImageViewCreateInfo view_info           = {VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO};
+    view_info.image                           = image.handle;
+    view_info.viewType                        = VK_IMAGE_VIEW_TYPE_2D;
+    view_info.format                          = format;
     view_info.subresourceRange.aspectMask     = aspect_mask;
     view_info.subresourceRange.baseMipLevel   = 0;
     view_info.subresourceRange.levelCount     = mip_levels;

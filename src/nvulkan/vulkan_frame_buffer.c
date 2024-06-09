@@ -3,6 +3,31 @@
 // Keep this here so we know later where we have to use it
 static VkAllocationCallbacks *g_allocator = 0;
 
+VkFramebuffer
+frame_buffer_create(VulkanSwapchain *sc, VkRenderPass render_pass, VkImageView color_view, VkImageView depth_view)
+{
+    VkImageView attachments[2] = {color_view, depth_view};
+
+    VkFramebufferCreateInfo create_info = {VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO};
+    create_info.renderPass              = render_pass;
+    create_info.attachmentCount         = 2;
+    create_info.pAttachments            = attachments;
+    create_info.width                   = sc->width;
+    create_info.height                  = sc->height;
+    create_info.layers                  = 1;
+
+    VkFramebuffer framebuffer = {0};
+    vkCreateFramebuffer(sc->ldevice->handle, &create_info, g_allocator, &framebuffer);
+
+    return framebuffer;
+}
+
+void
+frame_buffer_destroy(VulkanDevice *ldevice, VkFramebuffer framebuffer)
+{
+    vkDestroyFramebuffer(ldevice->handle, framebuffer, g_allocator);
+}
+
 VulkanFramebuffers
 frame_buffers_create(VulkanSwapchain *sc, VkRenderPass render_pass, VulkanImage *depth_image)
 {

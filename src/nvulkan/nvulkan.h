@@ -110,6 +110,9 @@ void        image_destroy(VulkanDevice *ldevice, VulkanImage *image);
 VkRenderPass render_pass_create(VulkanDevice *ldevice, VkFormat color_format, VkFormat depth_format);
 void         render_pass_destroy(VulkanDevice *ldevice, VkRenderPass render_pass);
 
+VkFramebuffer frame_buffer_create(VulkanSwapchain *sc, VkRenderPass render_pass, VkImageView color_view, VkImageView depth_view);
+void          frame_buffer_destroy(VulkanDevice *ldevice, VkFramebuffer framebuffer);
+
 VulkanFramebuffers frame_buffers_create(VulkanSwapchain *sc, VkRenderPass render_pass, VulkanImage *depth_image);
 void               frame_buffers_destroy(VulkanDevice *ldevice, VulkanFramebuffers *framebuffers);
 
