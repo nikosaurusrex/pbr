@@ -4,7 +4,7 @@
 static VkAllocationCallbacks *g_allocator = 0;
 
 VkCommandPool
-command_pool_create(VulkanDevice *ldevice)
+command_pool_create(Device *ldevice)
 {
     VkCommandPoolCreateInfo create_info = {VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO};
     create_info.flags                   = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
@@ -16,7 +16,7 @@ command_pool_create(VulkanDevice *ldevice)
 }
 
 void
-command_pool_destroy(VulkanDevice *ldevice, VkCommandPool cmd_pool)
+command_pool_destroy(Device *ldevice, VkCommandPool cmd_pool)
 {
     vkDestroyCommandPool(ldevice->handle, cmd_pool, g_allocator);
 }

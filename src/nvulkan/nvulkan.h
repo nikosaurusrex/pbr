@@ -16,25 +16,27 @@
     }
 
 #ifndef __cplusplus
-typedef struct VulkanDevice         VulkanDevice;
-typedef struct VulkanSwapchain      VulkanSwapchain;
-typedef struct VulkanImage          VulkanImage;
-typedef struct VulkanFramebuffers   VulkanFramebuffers;
-typedef struct VulkanCommandBuffers VulkanCommandBuffers;
+typedef struct Device            Device;
+typedef struct Swapchain         Swapchain;
+typedef struct Image             Image;
+typedef struct Framebuffers      Framebuffers;
+typedef struct CommandBuffers    CommandBuffers;
+typedef struct DescriptorSet     DescriptorSet;
+typedef struct DescriptorBinding DescriptorBinding;
 #else
 extern "C" {
 #endif
 
-struct VulkanDevice {
+struct Device {
     VkDevice handle;
     VkQueue  graphics_queue;
     uint32_t graphics_queue_index;
 };
 
-struct VulkanSwapchain {
+struct Swapchain {
     VkSwapchainKHR     handle;
     VkSurfaceKHR       surface;
-    VulkanDevice      *ldevice;
+    Device            *ldevice;
     VkPhysicalDevice   pdevice;
     VkSurfaceFormatKHR format;
 
@@ -54,21 +56,34 @@ struct VulkanSwapchain {
     uint32_t current_image;
 };
 
-struct VulkanImage {
+struct Image {
     VkImage        handle;
     VkImageView    view;
     VkDeviceMemory memory;
     VkFormat       format;
 };
 
-struct VulkanFramebuffers {
+struct Framebuffers {
     VkFramebuffer *handles;
     uint32_t       count;
 };
 
-struct VulkanCommandBuffers {
+struct CommandBuffers {
     VkCommandBuffer *handles;
     uint32_t         count;
+};
+
+struct DescriptorSet {
+    VkDescriptorSet       handle;
+    VkDescriptorSetLayout layout;
+    VkDescriptorPool      pool;
+};
+
+struct DescriptorBinding {
+    uint32_t           binding;
+    VkDescriptorType   type;
+    uint32_t           count;
+    VkShaderStageFlags stage;
 };
 
 VkInstance vulkan_instance_create(const char *name, int version, const char **extensions, uint32_t extension_count, const char **layers,
@@ -80,41 +95,43 @@ void         surface_destroy(VkInstance instance, VkSurfaceKHR surface);
 
 VkPhysicalDevice physical_device_find_compatible(VkInstance instance, const char **required_extensions, uint32_t required_extension_count);
 
-VulkanDevice logical_device_create(VkSurfaceKHR surface, VkPhysicalDevice pdevice, const char **extensions, uint32_t extension_count,
-                                   const char **layers, uint32_t layer_count);
-void         logical_device_destroy(VulkanDevice *ldevice);
+Device logical_device_create(VkSurfaceKHR surface, VkPhysicalDevice pdevice, const char **extensions, uint32_t extension_count,
+                             const char **layers, uint32_t layer_count);
+void   logical_device_destroy(Device *ldevice);
 
-VulkanSwapchain swapchain_create(VkSurfaceKHR surface, VkPhysicalDevice pdevice, VulkanDevice *ldevice, VkCommandPool cmd_pool,
-                                 uint32_t image_count);
-void            swapchain_update(VulkanSwapchain *sc, uint8_t vsync);
-void            swapchain_destroy(VulkanSwapchain *sc);
-uint32_t        swapchain_acquire(VulkanSwapchain *sc);
-void            swapchain_present(VulkanSwapchain *sc, VulkanCommandBuffers *cmd_bufs);
+Swapchain swapchain_create(VkSurfaceKHR surface, VkPhysicalDevice pdevice, Device *ldevice, VkCommandPool cmd_pool, uint32_t image_count);
+void      swapchain_update(Swapchain *sc, uint8_t vsync);
+void      swapchain_destroy(Swapchain *sc);
+uint32_t  swapchain_acquire(Swapchain *sc);
+void      swapchain_present(Swapchain *sc, CommandBuffers *cmd_bufs);
 
-VkCommandPool command_pool_create(VulkanDevice *ldevice);
-void          command_pool_destroy(VulkanDevice *ldevice, VkCommandPool cmd_pool);
+VkCommandPool command_pool_create(Device *ldevice);
+void          command_pool_destroy(Device *ldevice, VkCommandPool cmd_pool);
 
-VkCommandBuffer command_buffer_allocate(VulkanDevice *ldevice, VkCommandPool cmd_pool);
-void            command_buffer_free(VulkanDevice *ldevice, VkCommandPool cmd_pool, VkCommandBuffer cmd_buf);
+VkCommandBuffer command_buffer_allocate(Device *ldevice, VkCommandPool cmd_pool);
+void            command_buffer_free(Device *ldevice, VkCommandPool cmd_pool, VkCommandBuffer cmd_buf);
 void            command_buffer_begin(VkCommandBuffer cmd_buf);
 void            command_buffer_end(VkCommandBuffer cmd_buf);
-void            command_buffer_submit(VulkanDevice *ldevice, VkCommandBuffer cmd_buf);
+void            command_buffer_submit(Device *ldevice, VkCommandBuffer cmd_buf);
 
-VulkanCommandBuffers command_buffers_allocate(VulkanDevice *ldevice, VkCommandPool cmd_pool, uint32_t count);
-void                 command_buffers_free(VulkanDevice *ldevice, VkCommandPool cmd_pool, VulkanCommandBuffers *cmd_bufs);
+CommandBuffers command_buffers_allocate(Device *ldevice, VkCommandPool cmd_pool, uint32_t count);
+void           command_buffers_free(Device *ldevice, VkCommandPool cmd_pool, CommandBuffers *cmd_bufs);
 
-VulkanImage image_create(VkPhysicalDevice pdevice, VulkanDevice *ldevice, VkFormat format, uint32_t width, uint32_t height,
-                         uint32_t mip_levels, VkImageAspectFlags aspect_mask, VkImageUsageFlags usage);
-void        image_destroy(VulkanDevice *ldevice, VulkanImage *image);
+Image image_create(VkPhysicalDevice pdevice, Device *ldevice, VkFormat format, uint32_t width, uint32_t height, uint32_t mip_levels,
+                   VkImageAspectFlags aspect_mask, VkImageUsageFlags usage);
+void  image_destroy(Device *ldevice, Image *image);
 
-VkRenderPass render_pass_create(VulkanDevice *ldevice, VkFormat color_format, VkFormat depth_format);
-void         render_pass_destroy(VulkanDevice *ldevice, VkRenderPass render_pass);
+VkRenderPass render_pass_create(Device *ldevice, VkFormat color_format, VkFormat depth_format);
+void         render_pass_destroy(Device *ldevice, VkRenderPass render_pass);
 
-VkFramebuffer frame_buffer_create(VulkanSwapchain *sc, VkRenderPass render_pass, VkImageView color_view, VkImageView depth_view);
-void          frame_buffer_destroy(VulkanDevice *ldevice, VkFramebuffer framebuffer);
+VkFramebuffer frame_buffer_create(Swapchain *sc, VkRenderPass render_pass, VkImageView color_view, VkImageView depth_view);
+void          frame_buffer_destroy(Device *ldevice, VkFramebuffer framebuffer);
 
-VulkanFramebuffers frame_buffers_create(VulkanSwapchain *sc, VkRenderPass render_pass, VulkanImage *depth_image);
-void               frame_buffers_destroy(VulkanDevice *ldevice, VulkanFramebuffers *framebuffers);
+Framebuffers frame_buffers_create(Swapchain *sc, VkRenderPass render_pass, Image *depth_image);
+void         frame_buffers_destroy(Device *ldevice, Framebuffers *framebuffers);
+
+DescriptorSet descriptor_set_create(Device *ldevice, DescriptorBinding *bindings, uint32_t binding_count);
+void          descriptor_set_destroy(Device *ldevice, DescriptorSet *descriptor_set);
 
 #ifdef __cplusplus
 }

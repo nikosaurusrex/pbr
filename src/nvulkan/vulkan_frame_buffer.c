@@ -4,7 +4,7 @@
 static VkAllocationCallbacks *g_allocator = 0;
 
 VkFramebuffer
-frame_buffer_create(VulkanSwapchain *sc, VkRenderPass render_pass, VkImageView color_view, VkImageView depth_view)
+frame_buffer_create(Swapchain *sc, VkRenderPass render_pass, VkImageView color_view, VkImageView depth_view)
 {
     VkImageView attachments[2] = {color_view, depth_view};
 
@@ -23,15 +23,15 @@ frame_buffer_create(VulkanSwapchain *sc, VkRenderPass render_pass, VkImageView c
 }
 
 void
-frame_buffer_destroy(VulkanDevice *ldevice, VkFramebuffer framebuffer)
+frame_buffer_destroy(Device *ldevice, VkFramebuffer framebuffer)
 {
     vkDestroyFramebuffer(ldevice->handle, framebuffer, g_allocator);
 }
 
-VulkanFramebuffers
-frame_buffers_create(VulkanSwapchain *sc, VkRenderPass render_pass, VulkanImage *depth_image)
+Framebuffers
+frame_buffers_create(Swapchain *sc, VkRenderPass render_pass, Image *depth_image)
 {
-    VulkanFramebuffers framebuffers = {0};
+    Framebuffers framebuffers = {0};
 
     VkImageView attachments[2] = {0};
 
@@ -56,7 +56,7 @@ frame_buffers_create(VulkanSwapchain *sc, VkRenderPass render_pass, VulkanImage 
 }
 
 void
-frame_buffers_destroy(VulkanDevice *ldevice, VulkanFramebuffers *framebuffers)
+frame_buffers_destroy(Device *ldevice, Framebuffers *framebuffers)
 {
     for (uint32_t i = 0; i < framebuffers->count; ++i) {
         vkDestroyFramebuffer(ldevice->handle, framebuffers->handles[i], g_allocator);

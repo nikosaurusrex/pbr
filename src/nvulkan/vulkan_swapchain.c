@@ -7,10 +7,10 @@
 // Keep this here so we know later where we have to use it
 static VkAllocationCallbacks *g_allocator = 0;
 
-VulkanSwapchain
-swapchain_create(VkSurfaceKHR surface, VkPhysicalDevice pdevice, VulkanDevice *ldevice, VkCommandPool cmd_pool, uint32_t image_count)
+Swapchain
+swapchain_create(VkSurfaceKHR surface, VkPhysicalDevice pdevice, Device *ldevice, VkCommandPool cmd_pool, uint32_t image_count)
 {
-    VulkanSwapchain swapchain = {0};
+    Swapchain swapchain = {0};
 
     swapchain.surface     = surface;
     swapchain.pdevice     = pdevice;
@@ -58,12 +58,12 @@ swapchain_create(VkSurfaceKHR surface, VkPhysicalDevice pdevice, VulkanDevice *l
 }
 
 void
-swapchain_update(VulkanSwapchain *sc, uint8_t vsync)
+swapchain_update(Swapchain *sc, uint8_t vsync)
 {
     VkSurfaceKHR     surface       = sc->surface;
     VkSwapchainKHR   old_swapchain = sc->handle;
     VkPhysicalDevice pdevice       = sc->pdevice;
-    VulkanDevice    *ldevice       = sc->ldevice;
+    Device    *ldevice       = sc->ldevice;
 
     VkSurfaceCapabilitiesKHR surface_capabilities;
     vkGetPhysicalDeviceSurfaceCapabilitiesKHR(pdevice, surface, &surface_capabilities);
@@ -190,9 +190,9 @@ swapchain_update(VulkanSwapchain *sc, uint8_t vsync)
 }
 
 void
-swapchain_destroy(VulkanSwapchain *sc)
+swapchain_destroy(Swapchain *sc)
 {
-    VulkanDevice *ldevice = sc->ldevice;
+    Device *ldevice = sc->ldevice;
 
     for (uint32_t i = 0; i < sc->image_count; ++i) {
         vkDestroyImageView(ldevice->handle, sc->image_views[i], g_allocator);
@@ -214,7 +214,7 @@ swapchain_destroy(VulkanSwapchain *sc)
 }
 
 uint32_t
-swapchain_acquire(VulkanSwapchain *sc)
+swapchain_acquire(Swapchain *sc)
 {
     // @Todo check for resize and destroy and recreate swapchain
     VkDevice ldevice = sc->ldevice->handle;
@@ -235,9 +235,9 @@ swapchain_acquire(VulkanSwapchain *sc)
 }
 
 void
-swapchain_present(VulkanSwapchain *sc, VulkanCommandBuffers *cmd_bufs)
+swapchain_present(Swapchain *sc, CommandBuffers *cmd_bufs)
 {
-    VulkanDevice *ldevice       = sc->ldevice;
+    Device *ldevice       = sc->ldevice;
     uint32_t      current_image = sc->current_image;
 
     // @Todo move this

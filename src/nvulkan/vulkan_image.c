@@ -19,12 +19,12 @@ memory_type_find(VkPhysicalDevice pdevice, uint32_t type_bits, VkMemoryPropertyF
     return 0;
 }
 
-VulkanImage
-image_create(VkPhysicalDevice pdevice, VulkanDevice *ldevice, VkFormat format, uint32_t width, uint32_t height, uint32_t mip_levels,
+Image
+image_create(VkPhysicalDevice pdevice, Device *ldevice, VkFormat format, uint32_t width, uint32_t height, uint32_t mip_levels,
              VkImageAspectFlags aspect_mask, VkImageUsageFlags usage)
 {
     // Create image handle
-    VulkanImage image = {0};
+    Image image = {0};
     image.format      = format;
 
     VkImageCreateInfo image_info = {VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO};
@@ -73,7 +73,7 @@ image_create(VkPhysicalDevice pdevice, VulkanDevice *ldevice, VkFormat format, u
 }
 
 void
-image_destroy(VulkanDevice *ldevice, VulkanImage *image)
+image_destroy(Device *ldevice, Image *image)
 {
     vkDestroyImageView(ldevice->handle, image->view, g_allocator);
     vkDestroyImage(ldevice->handle, image->handle, g_allocator);

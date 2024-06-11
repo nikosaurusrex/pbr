@@ -4,7 +4,7 @@
 static VkAllocationCallbacks *g_allocator = 0;
 
 VkRenderPass
-render_pass_create(VulkanDevice *ldevice, VkFormat color_format, VkFormat depth_format)
+render_pass_create(Device *ldevice, VkFormat color_format, VkFormat depth_format)
 {
     VkAttachmentDescription attachments[2] = {0};
 
@@ -34,27 +34,27 @@ render_pass_create(VulkanDevice *ldevice, VkFormat color_format, VkFormat depth_
     depth_ref.layout                = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
     VkSubpassDependency subpass_dependency = {0};
-    subpass_dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
-    subpass_dependency.dstSubpass = 0;
-    subpass_dependency.srcStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
-    subpass_dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-    subpass_dependency.srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;
-    subpass_dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-    subpass_dependency.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+    subpass_dependency.srcSubpass          = VK_SUBPASS_EXTERNAL;
+    subpass_dependency.dstSubpass          = 0;
+    subpass_dependency.srcStageMask        = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+    subpass_dependency.dstStageMask        = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+    subpass_dependency.srcAccessMask       = VK_ACCESS_MEMORY_READ_BIT;
+    subpass_dependency.dstAccessMask       = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+    subpass_dependency.dependencyFlags     = VK_DEPENDENCY_BY_REGION_BIT;
 
-    VkSubpassDescription subpass_description = {0};
-    subpass_description.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-    subpass_description.colorAttachmentCount = 1;
-    subpass_description.pColorAttachments = &color_ref;
+    VkSubpassDescription subpass_description    = {0};
+    subpass_description.pipelineBindPoint       = VK_PIPELINE_BIND_POINT_GRAPHICS;
+    subpass_description.colorAttachmentCount    = 1;
+    subpass_description.pColorAttachments       = &color_ref;
     subpass_description.pDepthStencilAttachment = &depth_ref;
 
     VkRenderPassCreateInfo render_pass_info = {VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO};
-    render_pass_info.attachmentCount = 2;
-    render_pass_info.pAttachments = attachments;
-    render_pass_info.subpassCount = 1;
-    render_pass_info.pSubpasses = &subpass_description;
-    render_pass_info.dependencyCount = 1;
-    render_pass_info.pDependencies = &subpass_dependency;
+    render_pass_info.attachmentCount        = 2;
+    render_pass_info.pAttachments           = attachments;
+    render_pass_info.subpassCount           = 1;
+    render_pass_info.pSubpasses             = &subpass_description;
+    render_pass_info.dependencyCount        = 1;
+    render_pass_info.pDependencies          = &subpass_dependency;
 
     VkRenderPass render_pass;
     VK_CHECK(vkCreateRenderPass(ldevice->handle, &render_pass_info, g_allocator, &render_pass));
@@ -63,7 +63,7 @@ render_pass_create(VulkanDevice *ldevice, VkFormat color_format, VkFormat depth_
 }
 
 void
-render_pass_destroy(VulkanDevice *ldevice, VkRenderPass render_pass)
+render_pass_destroy(Device *ldevice, VkRenderPass render_pass)
 {
     vkDestroyRenderPass(ldevice->handle, render_pass, g_allocator);
 }

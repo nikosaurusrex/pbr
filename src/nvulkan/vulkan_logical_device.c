@@ -3,7 +3,7 @@
 // Keep this here so we know later where we have to use it
 static VkAllocationCallbacks *g_allocator = 0;
 
-VulkanDevice
+Device
 logical_device_create(VkSurfaceKHR surface, VkPhysicalDevice pdevice, const char **extensions, uint32_t extension_count,
                       const char **layers, uint32_t layer_count)
 {
@@ -62,7 +62,7 @@ logical_device_create(VkSurfaceKHR surface, VkPhysicalDevice pdevice, const char
     VkQueue graphics_queue;
     vkGetDeviceQueue(handle, graphics_index, 0, &graphics_queue);
 
-    VulkanDevice ldevice;
+    Device ldevice;
     ldevice.handle               = handle;
     ldevice.graphics_queue       = graphics_queue;
     ldevice.graphics_queue_index = graphics_index;
@@ -72,7 +72,7 @@ logical_device_create(VkSurfaceKHR surface, VkPhysicalDevice pdevice, const char
 }
 
 void
-logical_device_destroy(VulkanDevice *ldevice)
+logical_device_destroy(Device *ldevice)
 {
     vkDestroyDevice(ldevice->handle, g_allocator);
 }

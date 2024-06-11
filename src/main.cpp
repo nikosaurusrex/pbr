@@ -61,12 +61,12 @@ glfw_error_callback(int error, const char *description)
     fprintf(stderr, "GLFW Error %d: %s\n", error, description);
 }
 
-static VulkanImage
-depth_buffer_create(VkPhysicalDevice pdevice, VulkanDevice *ldevice, VulkanSwapchain *sc, VkCommandPool cmd_pool)
+static Image
+depth_buffer_create(VkPhysicalDevice pdevice, Device *ldevice, Swapchain *sc, VkCommandPool cmd_pool)
 {
     // Create depth buffer
     VkImageAspectFlags depth_aspect = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
-    VulkanImage        depth_image  = image_create(pdevice, ldevice, VK_FORMAT_D24_UNORM_S8_UINT, sc->width, sc->height, 1, depth_aspect,
+    Image        depth_image  = image_create(pdevice, ldevice, VK_FORMAT_D24_UNORM_S8_UINT, sc->width, sc->height, 1, depth_aspect,
                                                    VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT);
     VkCommandBuffer    cmd_buf      = command_buffer_allocate(ldevice, cmd_pool);
     command_buffer_begin(cmd_buf);
@@ -93,7 +93,7 @@ depth_buffer_create(VkPhysicalDevice pdevice, VulkanDevice *ldevice, VulkanSwapc
 }
 
 static VkDescriptorPool
-init_gui(GLFWwindow *window, VkInstance instance, VkPhysicalDevice pdevice, VulkanDevice *ldevice, uint32_t image_count,
+init_gui(GLFWwindow *window, VkInstance instance, VkPhysicalDevice pdevice, Device *ldevice, uint32_t image_count,
          VkRenderPass render_pass, VkCommandPool cmd_pool)
 {
     // Setup Dear ImGui context
@@ -150,12 +150,12 @@ init_gui(GLFWwindow *window, VkInstance instance, VkPhysicalDevice pdevice, Vulk
 }
 
 struct Texture {
-    VulkanImage           image;
+    Image           image;
     VkDescriptorImageInfo descriptor;
 };
 
 Texture
-texture_create(VkPhysicalDevice pdevice, VulkanDevice *ldevice, VkFormat format, uint32_t width, uint32_t height,
+texture_create(VkPhysicalDevice pdevice, Device *ldevice, VkFormat format, uint32_t width, uint32_t height,
                VkImageAspectFlags aspect_mask, VkImageUsageFlags usage)
 {
     Texture t = {0};
@@ -169,7 +169,7 @@ texture_create(VkPhysicalDevice pdevice, VulkanDevice *ldevice, VkFormat format,
 }
 
 void
-texture_destroy(VulkanDevice *ldevice, Texture *t)
+texture_destroy(Device *ldevice, Texture *t)
 {
     vkDestroySampler(ldevice->handle, t->descriptor.sampler, g_allocator);
     image_destroy(ldevice, &t->image);
@@ -183,7 +183,7 @@ struct Renderer {
 };
 
 Renderer
-renderer_create(VkPhysicalDevice pdevice, VulkanDevice *ldevice, VulkanSwapchain *sc, VkFormat depth_format)
+renderer_create(VkPhysicalDevice pdevice, Device *ldevice, Swapchain *sc, VkFormat depth_format)
 {
     Renderer r = {};
 
@@ -202,11 +202,13 @@ renderer_create(VkPhysicalDevice pdevice, VulkanDevice *ldevice, VulkanSwapchain
 
     r.framebuffer = frame_buffer_create(sc, r.render_pass, r.color_image.image.view, r.depth_image.image.view);
 
+    descriptor_set_create(ldevice);
+
     return r;
 }
 
 void
-renderer_destroy(VulkanDevice *ldevice, Renderer *r)
+renderer_destroy(Device *ldevice, Renderer *r)
 {
     frame_buffer_destroy(ldevice, r->framebuffer);
     render_pass_destroy(ldevice, r->render_pass);
@@ -248,17 +250,17 @@ main(int argc, char *argv[])
         log_fatal("Failed to find compatible GPU device!");
     }
 
-    VulkanDevice ldevice =
+    Device ldevice =
         logical_device_create(surface, pdevice, device_extensions, ARR_COUNT(device_extensions), layers, ARR_COUNT(layers));
 
     VkCommandPool cmd_pool = command_pool_create(&ldevice);
 
-    VulkanSwapchain swapchain = swapchain_create(surface, pdevice, &ldevice, cmd_pool, 2);
+    Swapchain swapchain = swapchain_create(surface, pdevice, &ldevice, cmd_pool, 2);
 
-    VulkanImage          depth_image   = depth_buffer_create(pdevice, &ldevice, &swapchain, cmd_pool);
+    Image          depth_image   = depth_buffer_create(pdevice, &ldevice, &swapchain, cmd_pool);
     VkRenderPass         render_pass   = render_pass_create(&ldevice, swapchain.format.format, depth_image.format);
-    VulkanFramebuffers   frame_buffers = frame_buffers_create(&swapchain, render_pass, &depth_image);
-    VulkanCommandBuffers cmd_bufs      = command_buffers_allocate(&ldevice, cmd_pool, swapchain.image_count);
+    Framebuffers   frame_buffers = frame_buffers_create(&swapchain, render_pass, &depth_image);
+    CommandBuffers cmd_bufs      = command_buffers_allocate(&ldevice, cmd_pool, swapchain.image_count);
 
     Renderer renderer = renderer_create(pdevice, &ldevice, &swapchain, depth_image.format);
 

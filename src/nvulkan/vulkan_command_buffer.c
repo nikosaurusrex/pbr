@@ -1,7 +1,7 @@
 #include "nvulkan.h"
 
 VkCommandBuffer
-command_buffer_allocate(VulkanDevice *ldevice, VkCommandPool cmd_pool)
+command_buffer_allocate(Device *ldevice, VkCommandPool cmd_pool)
 {
     VkCommandBufferAllocateInfo alloc_info = {VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO};
     alloc_info.commandBufferCount          = 1;
@@ -15,7 +15,7 @@ command_buffer_allocate(VulkanDevice *ldevice, VkCommandPool cmd_pool)
 }
 
 void
-command_buffer_free(VulkanDevice *ldevice, VkCommandPool cmd_pool, VkCommandBuffer cmd_buf)
+command_buffer_free(Device *ldevice, VkCommandPool cmd_pool, VkCommandBuffer cmd_buf)
 {
     vkFreeCommandBuffers(ldevice->handle, cmd_pool, 1, &cmd_buf);
 }
@@ -35,7 +35,7 @@ command_buffer_end(VkCommandBuffer cmd_buf)
 }
 
 void
-command_buffer_submit(VulkanDevice *ldevice, VkCommandBuffer cmd_buf)
+command_buffer_submit(Device *ldevice, VkCommandBuffer cmd_buf)
 {
     VK_CHECK(vkEndCommandBuffer(cmd_buf));
 
@@ -47,10 +47,10 @@ command_buffer_submit(VulkanDevice *ldevice, VkCommandBuffer cmd_buf)
     vkQueueWaitIdle(ldevice->graphics_queue);
 }
 
-VulkanCommandBuffers
-command_buffers_allocate(VulkanDevice *ldevice, VkCommandPool cmd_pool, uint32_t count)
+CommandBuffers
+command_buffers_allocate(Device *ldevice, VkCommandPool cmd_pool, uint32_t count)
 {
-    VulkanCommandBuffers cmd_bufs = {0};
+    CommandBuffers cmd_bufs = {0};
     cmd_bufs.count                = count;
     cmd_bufs.handles              = malloc(count * sizeof(VkCommandBuffer));
 
@@ -65,7 +65,7 @@ command_buffers_allocate(VulkanDevice *ldevice, VkCommandPool cmd_pool, uint32_t
 }
 
 void
-command_buffers_free(VulkanDevice *ldevice, VkCommandPool cmd_pool, VulkanCommandBuffers *cmd_bufs)
+command_buffers_free(Device *ldevice, VkCommandPool cmd_pool, CommandBuffers *cmd_bufs)
 {
     vkFreeCommandBuffers(ldevice->handle, cmd_pool, cmd_bufs->count, cmd_bufs->handles);
     free(cmd_bufs->handles);
