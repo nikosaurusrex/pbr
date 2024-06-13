@@ -24,8 +24,8 @@ image_create(VkPhysicalDevice pdevice, Device *ldevice, VkFormat format, uint32_
              VkImageAspectFlags aspect_mask, VkImageUsageFlags usage)
 {
     // Create image handle
-    Image image = {0};
-    image.format      = format;
+    Image image  = {0};
+    image.format = format;
 
     VkImageCreateInfo image_info = {VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO};
     image_info.imageType         = VK_IMAGE_TYPE_2D;
@@ -78,4 +78,25 @@ image_destroy(Device *ldevice, Image *image)
     vkDestroyImageView(ldevice->handle, image->view, g_allocator);
     vkDestroyImage(ldevice->handle, image->handle, g_allocator);
     vkFreeMemory(ldevice->handle, image->memory, g_allocator);
+}
+
+Texture
+texture_create(VkPhysicalDevice pdevice, Device *ldevice, VkFormat format, uint32_t width, uint32_t height, VkImageAspectFlags aspect_mask,
+               VkImageUsageFlags usage)
+{
+    Texture t = {0};
+
+    t.image = image_create(pdevice, ldevice, format, width, height, 1, aspect_mask, usage);
+
+    VkSamplerCreateInfo sampler_info = {VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO};
+    vkCreateSampler(ldevice->handle, &sampler_info, g_allocator, &t.descriptor.sampler);
+
+    return t;
+}
+
+void
+texture_destroy(Device *ldevice, Texture *t)
+{
+    vkDestroySampler(ldevice->handle, t->descriptor.sampler, g_allocator);
+    image_destroy(ldevice, &t->image);
 }

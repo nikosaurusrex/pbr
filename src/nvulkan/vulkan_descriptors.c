@@ -77,7 +77,7 @@ descriptor_set_create(Device *ldevice, DescriptorBinding *bindings, uint32_t bin
 void
 descriptor_set_destroy(Device *ldevice, DescriptorSet *descriptor_set)
 {
-    vkFreeDescriptorSets(ldevice->handle, descriptor_set->pool, 1, &descriptor_set->handle);
+    // vkFreeDescriptorSets(ldevice->handle, descriptor_set->pool, 1, &descriptor_set->handle);
     vkDestroyDescriptorPool(ldevice->handle, descriptor_set->pool, g_allocator);
     vkDestroyDescriptorSetLayout(ldevice->handle, descriptor_set->layout, g_allocator);
 }

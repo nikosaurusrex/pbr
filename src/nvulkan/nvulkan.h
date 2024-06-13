@@ -19,10 +19,13 @@
 typedef struct Device            Device;
 typedef struct Swapchain         Swapchain;
 typedef struct Image             Image;
+typedef struct Texture           Texture;
 typedef struct Framebuffers      Framebuffers;
 typedef struct CommandBuffers    CommandBuffers;
 typedef struct DescriptorSet     DescriptorSet;
 typedef struct DescriptorBinding DescriptorBinding;
+typedef struct Shader            Shader;
+typedef struct Pipeline          Pipeline;
 #else
 extern "C" {
 #endif
@@ -63,6 +66,11 @@ struct Image {
     VkFormat       format;
 };
 
+struct Texture {
+    Image                 image;
+    VkDescriptorImageInfo descriptor;
+};
+
 struct Framebuffers {
     VkFramebuffer *handles;
     uint32_t       count;
@@ -84,6 +92,22 @@ struct DescriptorBinding {
     VkDescriptorType   type;
     uint32_t           count;
     VkShaderStageFlags stage;
+};
+
+struct Shader {
+    const char *path;
+    uint32_t    stage;
+};
+
+struct Pipeline {
+    VkPipeline                         handle;
+    VkPipelineLayout                   layout;
+    VkPipelineShaderStageCreateInfo   *shader_stages;
+    uint32_t                           shader_count;
+    VkVertexInputBindingDescription   *binding_descriptions;
+    uint32_t                           binding_description_count;
+    VkVertexInputAttributeDescription *attribute_descriptions;
+    uint32_t                           attribute_description_count;
 };
 
 VkInstance vulkan_instance_create(const char *name, int version, const char **extensions, uint32_t extension_count, const char **layers,
@@ -121,6 +145,10 @@ Image image_create(VkPhysicalDevice pdevice, Device *ldevice, VkFormat format, u
                    VkImageAspectFlags aspect_mask, VkImageUsageFlags usage);
 void  image_destroy(Device *ldevice, Image *image);
 
+Texture texture_create(VkPhysicalDevice pdevice, Device *ldevice, VkFormat format, uint32_t width, uint32_t height,
+                       VkImageAspectFlags aspect_mask, VkImageUsageFlags usage);
+void    texture_destroy(Device *ldevice, Texture *t);
+
 VkRenderPass render_pass_create(Device *ldevice, VkFormat color_format, VkFormat depth_format);
 void         render_pass_destroy(Device *ldevice, VkRenderPass render_pass);
 
@@ -132,6 +160,11 @@ void         frame_buffers_destroy(Device *ldevice, Framebuffers *framebuffers);
 
 DescriptorSet descriptor_set_create(Device *ldevice, DescriptorBinding *bindings, uint32_t binding_count);
 void          descriptor_set_destroy(Device *ldevice, DescriptorSet *descriptor_set);
+
+Pipeline pipeline_create(Device *ldevice, DescriptorSet *desc_set, VkRenderPass render_pass, Shader *shaders, uint32_t shader_count,
+                         VkVertexInputBindingDescription *binding_descriptions, uint32_t binding_description_count,
+                         VkVertexInputAttributeDescription *attribute_descriptions, uint32_t attribute_description_count);
+void     pipeline_destroy(Device *ldevice, Pipeline *pipeline);
 
 #ifdef __cplusplus
 }

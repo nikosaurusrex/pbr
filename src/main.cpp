@@ -66,7 +66,7 @@ depth_buffer_create(VkPhysicalDevice pdevice, Device *ldevice, Swapchain *sc, Vk
 {
     // Create depth buffer
     VkImageAspectFlags depth_aspect = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
-    Image        depth_image  = image_create(pdevice, ldevice, VK_FORMAT_D24_UNORM_S8_UINT, sc->width, sc->height, 1, depth_aspect,
+    Image              depth_image  = image_create(pdevice, ldevice, VK_FORMAT_D24_UNORM_S8_UINT, sc->width, sc->height, 1, depth_aspect,
                                                    VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT);
     VkCommandBuffer    cmd_buf      = command_buffer_allocate(ldevice, cmd_pool);
     command_buffer_begin(cmd_buf);
@@ -93,8 +93,8 @@ depth_buffer_create(VkPhysicalDevice pdevice, Device *ldevice, Swapchain *sc, Vk
 }
 
 static VkDescriptorPool
-init_gui(GLFWwindow *window, VkInstance instance, VkPhysicalDevice pdevice, Device *ldevice, uint32_t image_count,
-         VkRenderPass render_pass, VkCommandPool cmd_pool)
+init_gui(GLFWwindow *window, VkInstance instance, VkPhysicalDevice pdevice, Device *ldevice, uint32_t image_count, VkRenderPass render_pass,
+         VkCommandPool cmd_pool)
 {
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
@@ -149,37 +149,13 @@ init_gui(GLFWwindow *window, VkInstance instance, VkPhysicalDevice pdevice, Devi
     return imgui_desc_pool;
 }
 
-struct Texture {
-    Image           image;
-    VkDescriptorImageInfo descriptor;
-};
-
-Texture
-texture_create(VkPhysicalDevice pdevice, Device *ldevice, VkFormat format, uint32_t width, uint32_t height,
-               VkImageAspectFlags aspect_mask, VkImageUsageFlags usage)
-{
-    Texture t = {0};
-
-    t.image = image_create(pdevice, ldevice, format, width, height, 1, aspect_mask, usage);
-
-    VkSamplerCreateInfo sampler_info = {VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO};
-    vkCreateSampler(ldevice->handle, &sampler_info, g_allocator, &t.descriptor.sampler);
-
-    return t;
-}
-
-void
-texture_destroy(Device *ldevice, Texture *t)
-{
-    vkDestroySampler(ldevice->handle, t->descriptor.sampler, g_allocator);
-    image_destroy(ldevice, &t->image);
-}
-
 struct Renderer {
     Texture       color_image;
     Texture       depth_image;
     VkRenderPass  render_pass;
     VkFramebuffer framebuffer;
+    DescriptorSet desc_set;
+    Pipeline      pipeline;
 };
 
 Renderer
@@ -202,7 +178,22 @@ renderer_create(VkPhysicalDevice pdevice, Device *ldevice, Swapchain *sc, VkForm
 
     r.framebuffer = frame_buffer_create(sc, r.render_pass, r.color_image.image.view, r.depth_image.image.view);
 
-    descriptor_set_create(ldevice);
+    DescriptorBinding *bindings = 0;
+    r.desc_set                  = descriptor_set_create(ldevice, bindings, ARR_COUNT(bindings));
+
+    Shader shaders[] = {
+        {"shaders/vert.spv", VK_SHADER_STAGE_VERTEX_BIT},
+        {"shaders/frag.spv", VK_SHADER_STAGE_FRAGMENT_BIT},
+    };
+
+    VkVertexInputBindingDescription vertex_bindings[] = {{0, sizeof(float) * 3, VK_VERTEX_INPUT_RATE_VERTEX}};
+
+    VkVertexInputAttributeDescription vertex_attributes[] = {
+        {0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0},
+    };
+
+    r.pipeline = pipeline_create(ldevice, &r.desc_set, r.render_pass, shaders, ARR_COUNT(shaders), vertex_bindings,
+                                 ARR_COUNT(vertex_bindings), vertex_attributes, ARR_COUNT(vertex_attributes));
 
     return r;
 }
@@ -210,6 +201,7 @@ renderer_create(VkPhysicalDevice pdevice, Device *ldevice, Swapchain *sc, VkForm
 void
 renderer_destroy(Device *ldevice, Renderer *r)
 {
+    descriptor_set_destroy(ldevice, &r->desc_set);
     frame_buffer_destroy(ldevice, r->framebuffer);
     render_pass_destroy(ldevice, r->render_pass);
     texture_destroy(ldevice, &r->color_image);
@@ -250,15 +242,14 @@ main(int argc, char *argv[])
         log_fatal("Failed to find compatible GPU device!");
     }
 
-    Device ldevice =
-        logical_device_create(surface, pdevice, device_extensions, ARR_COUNT(device_extensions), layers, ARR_COUNT(layers));
+    Device ldevice = logical_device_create(surface, pdevice, device_extensions, ARR_COUNT(device_extensions), layers, ARR_COUNT(layers));
 
     VkCommandPool cmd_pool = command_pool_create(&ldevice);
 
     Swapchain swapchain = swapchain_create(surface, pdevice, &ldevice, cmd_pool, 2);
 
     Image          depth_image   = depth_buffer_create(pdevice, &ldevice, &swapchain, cmd_pool);
-    VkRenderPass         render_pass   = render_pass_create(&ldevice, swapchain.format.format, depth_image.format);
+    VkRenderPass   render_pass   = render_pass_create(&ldevice, swapchain.format.format, depth_image.format);
     Framebuffers   frame_buffers = frame_buffers_create(&swapchain, render_pass, &depth_image);
     CommandBuffers cmd_bufs      = command_buffers_allocate(&ldevice, cmd_pool, swapchain.image_count);
 
@@ -280,12 +271,38 @@ main(int argc, char *argv[])
         VkCommandBuffer cmd_buf       = cmd_bufs.handles[current_image];
         command_buffer_begin(cmd_buf);
 
+        VkClearValue clear_colors[2] = {0};
+        clear_colors[0].color        = {{0.0f, 0.0f, 0.0f, 1.0f}};
+        clear_colors[1].depthStencil = {1.0f, 0};
+
+        // Scene
+        {
+            VkRenderPassBeginInfo begin_info = {VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO};
+            begin_info.clearValueCount = 2;
+            begin_info.pClearValues    = clear_colors;
+            begin_info.renderPass      = renderer.render_pass;
+            begin_info.framebuffer     = renderer.framebuffer;
+            begin_info.renderArea      = {{0, 0}, {swapchain.width, swapchain.height}};
+
+            // Rendering Scene
+            vkCmdBeginRenderPass(cmd_buf, &begin_info, VK_SUBPASS_CONTENTS_INLINE);
+
+            VkViewport viewport{0.0f, 0.0f, swapchain.width, swapchain.height, 0.0f, 1.0f};
+            vkCmdSetViewport(cmd_buf, 0, 1, &viewport);
+
+            VkRect2D scissor{{0, 0}, {swapchain.width, swapchain.height}};
+            vkCmdSetScissor(cmd_buf, 0, 1, &scissor);
+
+            vkCmdBindPipeline(cmd_buf, VK_PIPELINE_BIND_POINT_GRAPHICS, renderer.pipeline.handle);
+            vkCmdBindDescriptorSets(cmd_buf, VK_PIPELINE_BIND_POINT_GRAPHICS, renderer.pipeline.layout, 0, 1, &renderer.desc_set.handle, 0, 0);
+
+
+
+            vkCmdEndRenderPass(cmd_buf);
+        }
+
         // Render UI
         {
-            VkClearValue clear_colors[2] = {0};
-            clear_colors[0].color        = {{0.0f, 0.0f, 0.0f, 1.0f}};
-            clear_colors[1].depthStencil = {1.0f, 0};
-
             VkRenderPassBeginInfo ui_render_pass = {VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO};
             ui_render_pass.clearValueCount       = 2;
             ui_render_pass.pClearValues          = clear_colors;
