@@ -257,6 +257,15 @@ main(int argc, char *argv[])
 
     VkDescriptorPool imgui_desc_pool = init_gui(window, instance, pdevice, &ldevice, swapchain.image_count, render_pass, cmd_pool);
 
+    const float vertices[] = {
+        -0.5f, -0.5f, 0.0f, 0.5f, -0.5f, 0.0f, 0.0f, 0.5f, 0.0f,
+    };
+    const uint32_t indices[] = {0, 1, 2};
+
+    Buffer vertex_buffer =
+        buffer_create(pdevice, &ldevice, cmd_pool, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, (void *)vertices, sizeof(vertices));
+    Buffer index_buffer = buffer_create(pdevice, &ldevice, cmd_pool, VK_BUFFER_USAGE_INDEX_BUFFER_BIT, (void *)indices, sizeof(indices));
+
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
 
@@ -278,11 +287,11 @@ main(int argc, char *argv[])
         // Scene
         {
             VkRenderPassBeginInfo begin_info = {VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO};
-            begin_info.clearValueCount = 2;
-            begin_info.pClearValues    = clear_colors;
-            begin_info.renderPass      = renderer.render_pass;
-            begin_info.framebuffer     = renderer.framebuffer;
-            begin_info.renderArea      = {{0, 0}, {swapchain.width, swapchain.height}};
+            begin_info.clearValueCount       = 2;
+            begin_info.pClearValues          = clear_colors;
+            begin_info.renderPass            = renderer.render_pass;
+            begin_info.framebuffer           = renderer.framebuffer;
+            begin_info.renderArea            = {{0, 0}, {swapchain.width, swapchain.height}};
 
             // Rendering Scene
             vkCmdBeginRenderPass(cmd_buf, &begin_info, VK_SUBPASS_CONTENTS_INLINE);
@@ -294,9 +303,13 @@ main(int argc, char *argv[])
             vkCmdSetScissor(cmd_buf, 0, 1, &scissor);
 
             vkCmdBindPipeline(cmd_buf, VK_PIPELINE_BIND_POINT_GRAPHICS, renderer.pipeline.handle);
-            vkCmdBindDescriptorSets(cmd_buf, VK_PIPELINE_BIND_POINT_GRAPHICS, renderer.pipeline.layout, 0, 1, &renderer.desc_set.handle, 0, 0);
+            vkCmdBindDescriptorSets(cmd_buf, VK_PIPELINE_BIND_POINT_GRAPHICS, renderer.pipeline.layout, 0, 1, &renderer.desc_set.handle, 0,
+                                    0);
 
-
+            VkDeviceSize offset = 0;
+            vkCmdBindVertexBuffers(cmd_buf, 0, 1, &vertex_buffer.handle, &offset);
+            vkCmdBindIndexBuffer(cmd_buf, index_buffer.handle, offset, VK_INDEX_TYPE_UINT32);
+            vkCmdDrawIndexed(cmd_buf, 3, 1, 0, 0, 0);
 
             vkCmdEndRenderPass(cmd_buf);
         }

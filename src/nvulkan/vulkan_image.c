@@ -3,22 +3,6 @@
 // Keep this here so we know later where we have to use it
 static VkAllocationCallbacks *g_allocator = 0;
 
-static uint32_t
-memory_type_find(VkPhysicalDevice pdevice, uint32_t type_bits, VkMemoryPropertyFlags flags)
-{
-    VkPhysicalDeviceMemoryProperties memory_properties;
-    vkGetPhysicalDeviceMemoryProperties(pdevice, &memory_properties);
-
-    for (uint32_t i = 0; i < memory_properties.memoryTypeCount; ++i) {
-        if ((type_bits & (1 << i)) && (memory_properties.memoryTypes[i].propertyFlags & flags) == flags) {
-            return i;
-        }
-    }
-
-    // @Todo error handling
-    return 0;
-}
-
 Image
 image_create(VkPhysicalDevice pdevice, Device *ldevice, VkFormat format, uint32_t width, uint32_t height, uint32_t mip_levels,
              VkImageAspectFlags aspect_mask, VkImageUsageFlags usage)

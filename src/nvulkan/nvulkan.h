@@ -26,6 +26,7 @@ typedef struct DescriptorSet     DescriptorSet;
 typedef struct DescriptorBinding DescriptorBinding;
 typedef struct Shader            Shader;
 typedef struct Pipeline          Pipeline;
+typedef struct Buffer            Buffer;
 #else
 extern "C" {
 #endif
@@ -110,6 +111,11 @@ struct Pipeline {
     uint32_t                           attribute_description_count;
 };
 
+struct Buffer {
+    VkBuffer       handle;
+    VkDeviceMemory memory;
+};
+
 VkInstance vulkan_instance_create(const char *name, int version, const char **extensions, uint32_t extension_count, const char **layers,
                                   uint32_t layer_count);
 void       vulkan_instance_destroy(VkInstance instance);
@@ -165,6 +171,27 @@ Pipeline pipeline_create(Device *ldevice, DescriptorSet *desc_set, VkRenderPass 
                          VkVertexInputBindingDescription *binding_descriptions, uint32_t binding_description_count,
                          VkVertexInputAttributeDescription *attribute_descriptions, uint32_t attribute_description_count);
 void     pipeline_destroy(Device *ldevice, Pipeline *pipeline);
+
+Buffer buffer_create(VkPhysicalDevice pdevice, Device *ldevice, VkCommandPool cmd_pool, VkBufferUsageFlags usage, void *data,
+                     VkDeviceSize size);
+void   buffer_destroy(Device *ldevice, Buffer *buffer);
+
+// @Todo move somewhere
+static inline uint32_t
+memory_type_find(VkPhysicalDevice pdevice, uint32_t type_bits, VkMemoryPropertyFlags flags)
+{
+    VkPhysicalDeviceMemoryProperties memory_properties;
+    vkGetPhysicalDeviceMemoryProperties(pdevice, &memory_properties);
+
+    for (uint32_t i = 0; i < memory_properties.memoryTypeCount; ++i) {
+        if ((type_bits & (1 << i)) && (memory_properties.memoryTypes[i].propertyFlags & flags) == flags) {
+            return i;
+        }
+    }
+
+    // @Todo error handling
+    return 0;
+}
 
 #ifdef __cplusplus
 }
