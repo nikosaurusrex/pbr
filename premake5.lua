@@ -36,6 +36,8 @@ project "raytracer"
 		"src/**.cpp",
 		"src/nvulkan/**.h",
 		"src/nvulkan/**.c",
+		"src/gui/**.h",
+		"src/gui/**.cpp",
 	}
 
   includedirs
@@ -43,6 +45,7 @@ project "raytracer"
     "vendor/glfw/include",
     "vendor/imgui",
     "%{VULKAN_SDK}/Include",
+	"src"
   }
 
   links {

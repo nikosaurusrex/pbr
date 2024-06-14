@@ -144,6 +144,7 @@ Image image_create(VkPhysicalDevice pdevice, Device *ldevice, VkFormat format, u
 void  image_destroy(Device *ldevice, Image *image);
 void  image_transition_layout(VkCommandBuffer cmd_buf, Image *image, VkImageLayout old_layout, VkImageLayout new_layout,
                               VkImageAspectFlags aspect_mask);
+Image image_create_depth(VkPhysicalDevice pdevice, Device *ldevice, Swapchain *sc, VkCommandPool cmd_pool);
 
 Texture texture_create(VkPhysicalDevice pdevice, Device *ldevice, VkFormat format, uint32_t width, uint32_t height,
                        VkImageAspectFlags aspect_mask, VkImageUsageFlags usage);
