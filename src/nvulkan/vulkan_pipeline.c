@@ -6,7 +6,7 @@ static VkAllocationCallbacks *g_allocator = 0;
 Pipeline
 pipeline_create(Device *ldevice, DescriptorSet *desc_set, VkRenderPass render_pass, Shader *shaders, uint32_t shader_count,
                 VkVertexInputBindingDescription *binding_descriptions, uint32_t binding_description_count,
-                VkVertexInputAttributeDescription *attribute_descriptions, uint32_t attribute_description_count)
+                VkVertexInputAttributeDescription *attribute_descriptions, uint32_t attribute_description_count, uint32_t cull_mode)
 {
     Pipeline p = {0};
 
@@ -45,7 +45,7 @@ pipeline_create(Device *ldevice, DescriptorSet *desc_set, VkRenderPass render_pa
         stage.pName                           = "main";
 
         p.shader_stages[i] = stage;
-        // @Todo: can I free code here?
+        free(code);
     }
 
     VkPipelineInputAssemblyStateCreateInfo input_assembly_state = {VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO};
@@ -54,7 +54,7 @@ pipeline_create(Device *ldevice, DescriptorSet *desc_set, VkRenderPass render_pa
 
     VkPipelineRasterizationStateCreateInfo rasterization_state = {VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO};
     rasterization_state.polygonMode                            = VK_POLYGON_MODE_FILL;
-    rasterization_state.cullMode                               = VK_CULL_MODE_BACK_BIT;
+    rasterization_state.cullMode                               = cull_mode;
     rasterization_state.frontFace                              = VK_FRONT_FACE_CLOCKWISE;
     rasterization_state.lineWidth                              = 1.0f;
 
@@ -125,4 +125,11 @@ pipeline_create(Device *ldevice, DescriptorSet *desc_set, VkRenderPass render_pa
 void
 pipeline_destroy(Device *ldevice, Pipeline *pipeline)
 {
+    for (uint32_t i = 0; i < pipeline->shader_count; ++i) {
+        vkDestroyShaderModule(ldevice->handle, pipeline->shader_stages[i].module, g_allocator);
+    }
+    free(pipeline->shader_stages);
+
+    vkDestroyPipelineLayout(ldevice->handle, pipeline->layout, g_allocator);
+    vkDestroyPipeline(ldevice->handle, pipeline->handle, g_allocator);
 }

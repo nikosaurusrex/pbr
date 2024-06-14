@@ -6,20 +6,9 @@
 static VkAllocationCallbacks *g_allocator = 0;
 
 DescriptorSet
-descriptor_set_create(Device *ldevice, DescriptorBinding *bindings, uint32_t binding_count)
+descriptor_set_create(Device *ldevice, VkDescriptorSetLayoutBinding *bindings, uint32_t binding_count)
 {
     DescriptorSet desc_set = {0};
-
-    VkDescriptorSetLayoutCreateFlags flags = 0;
-
-    VkDescriptorBindingFlags *binding_flags = malloc(binding_count * sizeof(VkDescriptorBindingFlags));
-    for (uint32_t i = 0; i < binding_count; i++) {
-        binding_flags[i] = 0;
-    }
-
-    VkDescriptorSetLayoutBindingFlagsCreateInfo binding_info = {VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO};
-    binding_info.bindingCount                                = binding_count;
-    binding_info.pBindingFlags                               = binding_flags;
 
     VkDescriptorSetLayoutCreateInfo layout_info = {VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO};
     layout_info.bindingCount                    = binding_count;
@@ -32,22 +21,22 @@ descriptor_set_create(Device *ldevice, DescriptorBinding *bindings, uint32_t bin
     uint32_t              pool_size_count = 0;
 
     for (uint32_t i = 0; i < binding_count; i++) {
-        DescriptorBinding binding = bindings[i];
-        if (binding.count == 0) {
+        VkDescriptorSetLayoutBinding binding = bindings[i];
+        if (binding.descriptorCount == 0) {
             continue;
         }
 
         uint8_t found = 0;
         for (uint32_t j = 0; j < pool_size_count; j++) {
-            if (pool_sizes[j].type == binding.type) {
-                pool_sizes[j].descriptorCount += binding.count;
+            if (pool_sizes[j].type == binding.descriptorType) {
+                pool_sizes[j].descriptorCount += binding.descriptorCount;
                 found = 1;
                 break;
             }
         }
 
         if (!found) {
-            VkDescriptorPoolSize pool_size = {binding.type, binding.count};
+            VkDescriptorPoolSize pool_size = {binding.descriptorType, binding.descriptorCount};
 
             assert(pool_size_count < binding_count);
             pool_sizes[pool_size_count++]   = pool_size;
@@ -69,7 +58,6 @@ descriptor_set_create(Device *ldevice, DescriptorBinding *bindings, uint32_t bin
     VK_CHECK(vkAllocateDescriptorSets(ldevice->handle, &allocate_info, &desc_set.handle));
 
     free(pool_sizes);
-    free(binding_flags);
 
     return desc_set;
 }

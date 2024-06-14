@@ -75,6 +75,9 @@ texture_create(VkPhysicalDevice pdevice, Device *ldevice, VkFormat format, uint3
     VkSamplerCreateInfo sampler_info = {VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO};
     vkCreateSampler(ldevice->handle, &sampler_info, g_allocator, &t.descriptor.sampler);
 
+    t.descriptor.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    t.descriptor.imageView   = t.image.view;
+
     return t;
 }
 
@@ -83,4 +86,23 @@ texture_destroy(Device *ldevice, Texture *t)
 {
     vkDestroySampler(ldevice->handle, t->descriptor.sampler, g_allocator);
     image_destroy(ldevice, &t->image);
+}
+
+void
+image_transition_layout(VkCommandBuffer cmd_buf, Image *image, VkImageLayout old_layout, VkImageLayout new_layout, VkImageAspectFlags aspect_mask)
+{
+    VkImageSubresourceRange subresource_range = {aspect_mask, 0, VK_REMAINING_MIP_LEVELS, 0, VK_REMAINING_ARRAY_LAYERS};
+
+    VkImageMemoryBarrier barrier = {VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER};
+    barrier.oldLayout = old_layout;
+    barrier.newLayout = new_layout;
+    barrier.image = image->handle;
+    barrier.subresourceRange = subresource_range;
+    barrier.srcAccessMask = 0;
+    barrier.dstAccessMask = 0;
+
+    VkPipelineStageFlags src_stage = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+    VkPipelineStageFlags dst_stage = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+
+    vkCmdPipelineBarrier(cmd_buf, src_stage, dst_stage, 0, 0, 0, 0, 0, 1, &barrier);
 }

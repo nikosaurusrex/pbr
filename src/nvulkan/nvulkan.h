@@ -16,17 +16,16 @@
     }
 
 #ifndef __cplusplus
-typedef struct Device            Device;
-typedef struct Swapchain         Swapchain;
-typedef struct Image             Image;
-typedef struct Texture           Texture;
-typedef struct Framebuffers      Framebuffers;
-typedef struct CommandBuffers    CommandBuffers;
-typedef struct DescriptorSet     DescriptorSet;
-typedef struct DescriptorBinding DescriptorBinding;
-typedef struct Shader            Shader;
-typedef struct Pipeline          Pipeline;
-typedef struct Buffer            Buffer;
+typedef struct Device         Device;
+typedef struct Swapchain      Swapchain;
+typedef struct Image          Image;
+typedef struct Texture        Texture;
+typedef struct Framebuffers   Framebuffers;
+typedef struct CommandBuffers CommandBuffers;
+typedef struct DescriptorSet  DescriptorSet;
+typedef struct Shader         Shader;
+typedef struct Pipeline       Pipeline;
+typedef struct Buffer         Buffer;
 #else
 extern "C" {
 #endif
@@ -88,13 +87,6 @@ struct DescriptorSet {
     VkDescriptorPool      pool;
 };
 
-struct DescriptorBinding {
-    uint32_t           binding;
-    VkDescriptorType   type;
-    uint32_t           count;
-    VkShaderStageFlags stage;
-};
-
 struct Shader {
     const char *path;
     uint32_t    stage;
@@ -150,12 +142,15 @@ void           command_buffers_free(Device *ldevice, VkCommandPool cmd_pool, Com
 Image image_create(VkPhysicalDevice pdevice, Device *ldevice, VkFormat format, uint32_t width, uint32_t height, uint32_t mip_levels,
                    VkImageAspectFlags aspect_mask, VkImageUsageFlags usage);
 void  image_destroy(Device *ldevice, Image *image);
+void  image_transition_layout(VkCommandBuffer cmd_buf, Image *image, VkImageLayout old_layout, VkImageLayout new_layout,
+                              VkImageAspectFlags aspect_mask);
 
 Texture texture_create(VkPhysicalDevice pdevice, Device *ldevice, VkFormat format, uint32_t width, uint32_t height,
                        VkImageAspectFlags aspect_mask, VkImageUsageFlags usage);
 void    texture_destroy(Device *ldevice, Texture *t);
 
-VkRenderPass render_pass_create(Device *ldevice, VkFormat color_format, VkFormat depth_format);
+VkRenderPass render_pass_create_present(Device *ldevice, VkFormat color_format, VkFormat depth_format);
+VkRenderPass render_pass_create_offscreen(Device *ldevice, VkFormat color_format, VkFormat depth_format);
 void         render_pass_destroy(Device *ldevice, VkRenderPass render_pass);
 
 VkFramebuffer frame_buffer_create(Swapchain *sc, VkRenderPass render_pass, VkImageView color_view, VkImageView depth_view);
@@ -164,12 +159,13 @@ void          frame_buffer_destroy(Device *ldevice, VkFramebuffer framebuffer);
 Framebuffers frame_buffers_create(Swapchain *sc, VkRenderPass render_pass, Image *depth_image);
 void         frame_buffers_destroy(Device *ldevice, Framebuffers *framebuffers);
 
-DescriptorSet descriptor_set_create(Device *ldevice, DescriptorBinding *bindings, uint32_t binding_count);
+DescriptorSet descriptor_set_create(Device *ldevice, VkDescriptorSetLayoutBinding *bindings, uint32_t binding_count);
 void          descriptor_set_destroy(Device *ldevice, DescriptorSet *descriptor_set);
 
 Pipeline pipeline_create(Device *ldevice, DescriptorSet *desc_set, VkRenderPass render_pass, Shader *shaders, uint32_t shader_count,
                          VkVertexInputBindingDescription *binding_descriptions, uint32_t binding_description_count,
-                         VkVertexInputAttributeDescription *attribute_descriptions, uint32_t attribute_description_count);
+                         VkVertexInputAttributeDescription *attribute_descriptions, uint32_t attribute_description_count,
+                         uint32_t cull_mode);
 void     pipeline_destroy(Device *ldevice, Pipeline *pipeline);
 
 Buffer buffer_create(VkPhysicalDevice pdevice, Device *ldevice, VkCommandPool cmd_pool, VkBufferUsageFlags usage, void *data,
