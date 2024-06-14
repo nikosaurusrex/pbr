@@ -314,9 +314,14 @@ main(int argc, char *argv[])
     VkDescriptorPool imgui_desc_pool = init_gui(window, instance, pdevice, &ldevice, swapchain.image_count, present_render_pass, cmd_pool);
 
     const float vertices[] = {
-        -0.5f, -0.5f, 0.0f, 0.5f, -0.5f, 0.0f, 0.0f, 0.5f, 0.0f,
+        -1.0f, -1.0f, 0.0f, // bottom left
+        1.0f,  -1.0f, 0.0f, // bottom right
+        0.0f,  1.0f,  0.0f, // top
     };
-    const uint32_t indices[] = {0, 1, 2};
+
+    const uint32_t indices[] = {
+        0, 1, 2, 
+    };
 
     Buffer vertex_buffer =
         buffer_create(pdevice, &ldevice, cmd_pool, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, (void *)vertices, sizeof(vertices));
@@ -325,12 +330,13 @@ main(int argc, char *argv[])
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
 
+        /*
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
         {
             ImGui::ShowDemoWindow();
-        }
+        }*/
 
         uint32_t        current_image = swapchain_acquire(&swapchain);
         VkCommandBuffer cmd_buf       = cmd_bufs.handles[current_image];
@@ -390,10 +396,11 @@ main(int argc, char *argv[])
             vkCmdBindPipeline(cmd_buf, VK_PIPELINE_BIND_POINT_GRAPHICS, postprocess.pipeline.handle);
             vkCmdBindDescriptorSets(cmd_buf, VK_PIPELINE_BIND_POINT_GRAPHICS, postprocess.pipeline.layout, 0, 1,
                                     &postprocess.desc_set.handle, 0, 0);
+
             vkCmdDraw(cmd_buf, 3, 1, 0, 0);
 
-            ImGui::Render();
-            ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd_buf);
+            // ImGui::Render();
+            // ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd_buf);
             vkCmdEndRenderPass(cmd_buf);
         }
 
