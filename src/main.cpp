@@ -263,6 +263,52 @@ postprocess_destroy(Device *ldevice, Postprocess *p)
     descriptor_set_destroy(ldevice, &p->desc_set);
 }
 
+struct ResizeInfo {
+    Swapchain *sc;
+    VkCommandPool cmd_pool;
+    Image *depth_buffer;
+    Framebuffers *frame_buffers;
+    VkRenderPass render_pass;
+    Renderer *renderer;
+    Postprocess *postprocess;
+};
+
+void resize_callback(GLFWwindow *window, int width, int height)
+{
+    ResizeInfo *info = (ResizeInfo *)glfwGetWindowUserPointer(window);
+
+    Swapchain *sc = info->sc;
+    Device *ldevice = info->sc->ldevice;
+    VkPhysicalDevice pdevice = sc->pdevice;
+
+    vkDeviceWaitIdle(ldevice->handle);
+    vkQueueWaitIdle(ldevice->graphics_queue);
+
+    // Recreate swapchain
+    swapchain_update(info->sc, info->cmd_pool, 0);
+
+    // Update imgui
+    ImGui::GetIO().DisplaySize = ImVec2(width, height);
+
+    image_destroy(ldevice, info->depth_buffer);
+    *info->depth_buffer = depth_buffer_create(pdevice, ldevice, sc, info->cmd_pool);
+
+    frame_buffers_destroy(ldevice, info->frame_buffers);
+    *info->frame_buffers = frame_buffers_create(sc, info->render_pass, info->depth_buffer);
+
+    renderer_destroy(ldevice, info->renderer);
+    *info->renderer = renderer_create(pdevice, ldevice, sc, info->cmd_pool, info->depth_buffer->format);
+
+    VkWriteDescriptorSet desc_write = {VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET};
+    desc_write.dstSet               = info->postprocess->desc_set.handle;
+    desc_write.dstBinding           = 0;
+    desc_write.descriptorCount      = 1;
+    desc_write.descriptorType       = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    desc_write.pImageInfo           = &info->renderer->color_image.descriptor;
+
+    vkUpdateDescriptorSets(ldevice->handle, 1, &desc_write, 0, 0);
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -313,6 +359,18 @@ main(int argc, char *argv[])
 
     VkDescriptorPool imgui_desc_pool = init_gui(window, instance, pdevice, &ldevice, swapchain.image_count, present_render_pass, cmd_pool);
 
+    ResizeInfo resize_info = {0};
+    resize_info.cmd_pool = cmd_pool;
+    resize_info.sc = &swapchain;
+    resize_info.depth_buffer = &depth_image;
+    resize_info.frame_buffers = &frame_buffers;
+    resize_info.render_pass = present_render_pass;
+    resize_info.renderer = &renderer;
+    resize_info.postprocess = &postprocess;
+
+    glfwSetWindowUserPointer(window, &resize_info);
+    glfwSetFramebufferSizeCallback(window, resize_callback);
+
     const float vertices[] = {
         -1.0f, -1.0f, 0.0f, // bottom left
         1.0f,  -1.0f, 0.0f, // bottom right
@@ -320,7 +378,9 @@ main(int argc, char *argv[])
     };
 
     const uint32_t indices[] = {
-        0, 1, 2, 
+        0,
+        1,
+        2,
     };
 
     Buffer vertex_buffer =
@@ -330,13 +390,12 @@ main(int argc, char *argv[])
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
 
-        /*
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
         {
             ImGui::ShowDemoWindow();
-        }*/
+        }
 
         uint32_t        current_image = swapchain_acquire(&swapchain);
         VkCommandBuffer cmd_buf       = cmd_bufs.handles[current_image];
@@ -399,8 +458,8 @@ main(int argc, char *argv[])
 
             vkCmdDraw(cmd_buf, 3, 1, 0, 0);
 
-            // ImGui::Render();
-            // ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd_buf);
+            ImGui::Render();
+            ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd_buf);
             vkCmdEndRenderPass(cmd_buf);
         }
 

@@ -36,7 +36,7 @@ swapchain_create(VkSurfaceKHR surface, VkPhysicalDevice pdevice, Device *ldevice
         }
     }
 
-    swapchain_update(&swapchain, 1);
+    swapchain_update(&swapchain, cmd_pool, 1);
 
     // Create fences
     swapchain.fences = malloc(swapchain.image_count * sizeof(VkFence));
@@ -46,19 +46,12 @@ swapchain_create(VkSurfaceKHR surface, VkPhysicalDevice pdevice, Device *ldevice
         VK_CHECK(vkCreateFence(ldevice->handle, &create_info, g_allocator, &swapchain.fences[i]));
     }
 
-    VkCommandBuffer cmd_buf = command_buffer_allocate(ldevice, cmd_pool);
-    command_buffer_begin(cmd_buf);
-    vkCmdPipelineBarrier(cmd_buf, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, 0, 0, 0, 0, 0,
-                         swapchain.image_count, swapchain.barriers);
-    command_buffer_submit(ldevice, cmd_buf);
-    command_buffer_free(ldevice, cmd_pool, cmd_buf);
-
     free(formats);
     return swapchain;
 }
 
 void
-swapchain_update(Swapchain *sc, uint8_t vsync)
+swapchain_update(Swapchain *sc, VkCommandPool cmd_pool, uint8_t vsync)
 {
     VkSurfaceKHR     surface       = sc->surface;
     VkSwapchainKHR   old_swapchain = sc->handle;
@@ -133,7 +126,7 @@ swapchain_update(Swapchain *sc, uint8_t vsync)
             vkDestroySemaphore(ldevice->handle, sc->write_semaphores[i], g_allocator);
         }
 
-        vkDestroySwapchainKHR(ldevice->handle, sc->handle, g_allocator);
+        vkDestroySwapchainKHR(ldevice->handle, old_swapchain, g_allocator);
     }
 
     // Setup images, image views and barriers
@@ -187,6 +180,13 @@ swapchain_update(Swapchain *sc, uint8_t vsync)
         VK_CHECK(vkCreateSemaphore(ldevice->handle, &create_info, g_allocator, &sc->read_semaphores[i]));
         VK_CHECK(vkCreateSemaphore(ldevice->handle, &create_info, g_allocator, &sc->write_semaphores[i]));
     }
+
+    VkCommandBuffer cmd_buf = command_buffer_allocate(ldevice, cmd_pool);
+    command_buffer_begin(cmd_buf);
+    vkCmdPipelineBarrier(cmd_buf, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, 0, 0, 0, 0, 0,
+                         sc->image_count, sc->barriers);
+    command_buffer_submit(ldevice, cmd_buf);
+    command_buffer_free(ldevice, cmd_pool, cmd_buf);
 }
 
 void

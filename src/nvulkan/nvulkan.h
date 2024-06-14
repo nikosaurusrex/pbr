@@ -122,7 +122,7 @@ Device logical_device_create(VkSurfaceKHR surface, VkPhysicalDevice pdevice, con
 void   logical_device_destroy(Device *ldevice);
 
 Swapchain swapchain_create(VkSurfaceKHR surface, VkPhysicalDevice pdevice, Device *ldevice, VkCommandPool cmd_pool, uint32_t image_count);
-void      swapchain_update(Swapchain *sc, uint8_t vsync);
+void      swapchain_update(Swapchain *sc, VkCommandPool cmd_pool, uint8_t vsync);
 void      swapchain_destroy(Swapchain *sc);
 uint32_t  swapchain_acquire(Swapchain *sc);
 void      swapchain_present(Swapchain *sc, CommandBuffers *cmd_bufs);
