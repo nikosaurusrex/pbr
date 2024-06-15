@@ -1,12 +1,12 @@
 -- premake5.lua
-workspace "raytracer"
+workspace "pbr"
     architecture "x64"
     configurations
     { 
         "Debug",
         "Release"
     }
-    startproject "raytracer"
+    startproject "pbr"
 
     flags
 	{
@@ -21,7 +21,7 @@ group "Dependencies"
 	include "vendor/imgui"
 group ""
 
-project "raytracer"
+project "pbr"
     kind "ConsoleApp"
 	language "C++"
 	cppdialect "C++20"
