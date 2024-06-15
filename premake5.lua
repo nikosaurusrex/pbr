@@ -45,7 +45,8 @@ project "raytracer"
     "vendor/glfw/include",
     "vendor/imgui",
     "%{VULKAN_SDK}/Include",
-	"src"
+	"src",
+	"vendor/sh_libs"
   }
 
   links {
