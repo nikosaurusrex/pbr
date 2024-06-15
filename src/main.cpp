@@ -11,38 +11,11 @@
 #include <GLFW/glfw3.h>
 
 #include "gui/vulkan_imgui.h"
+#include "models/models.h"
 #include "nvulkan/nvulkan.h"
 
 // Keep this here so we know later where we have to use it
 static VkAllocationCallbacks *g_allocator = 0;
-
-void
-log_fatal(const char *fmt, ...)
-{
-    va_list args;
-    va_start(args, fmt);
-
-    fprintf(stderr, "[Fatal] ");
-
-    vfprintf(stderr, fmt, args);
-    putc('\n', stderr);
-    va_end(args);
-
-    exit(1);
-}
-
-void
-log_dev(const char *fmt, ...)
-{
-    va_list args;
-    va_start(args, fmt);
-
-    fprintf(stdout, "[Dev] ");
-
-    vfprintf(stdout, fmt, args);
-    putc('\n', stdout);
-    va_end(args);
-}
 
 static void
 check_vk_result(VkResult err)
@@ -60,81 +33,6 @@ glfw_error_callback(int error, const char *description)
     fprintf(stderr, "GLFW Error %d: %s\n", error, description);
 }
 
-struct SceneRenderer {
-    Texture       color_image;
-    Texture       depth_image;
-    VkRenderPass  render_pass;
-    VkFramebuffer framebuffer;
-    DescriptorSet desc_set;
-    Pipeline      pipeline;
-};
-
-SceneRenderer
-scene_renderer_create(VkPhysicalDevice pdevice, Device *ldevice, Swapchain *sc, VkCommandPool cmd_pool, VkFormat depth_format)
-{
-    SceneRenderer r = {};
-
-    VkFormat color_format = sc->format.format;
-    uint32_t width        = sc->width;
-    uint32_t height       = sc->height;
-
-    // Create color and depth images
-    r.color_image                        = texture_create(pdevice, ldevice, color_format, width, height, VK_IMAGE_ASPECT_COLOR_BIT,
-                                                          VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT);
-    r.color_image.descriptor.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-
-    r.depth_image = texture_create(pdevice, ldevice, depth_format, width, height, VK_IMAGE_ASPECT_DEPTH_BIT,
-                                   VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT);
-
-    // Transition image layouts
-    VkCommandBuffer cmd_buf = command_buffer_allocate(ldevice, cmd_pool);
-    command_buffer_begin(cmd_buf);
-
-    image_transition_layout(cmd_buf, &r.color_image.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_ASPECT_COLOR_BIT);
-    image_transition_layout(cmd_buf, &r.depth_image.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
-                            VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT);
-
-    command_buffer_submit(ldevice, cmd_buf);
-    command_buffer_free(ldevice, cmd_pool, cmd_buf);
-
-    // Create render pass for offscreen rendering
-    r.render_pass = render_pass_create_offscreen(ldevice, r.color_image.image.format, r.depth_image.image.format);
-
-    // Create framebuffer
-    r.framebuffer = frame_buffer_create(sc, r.render_pass, r.color_image.image.view, r.depth_image.image.view);
-
-    // Create descriptor set
-    r.desc_set = descriptor_set_create(ldevice, 0, 0);
-
-    // Setup graphics pipeline
-    Shader shaders[] = {
-        {"shaders/vert.spv", VK_SHADER_STAGE_VERTEX_BIT},
-        {"shaders/frag.spv", VK_SHADER_STAGE_FRAGMENT_BIT},
-    };
-
-    VkVertexInputBindingDescription vertex_bindings[] = {{0, sizeof(float) * 3, VK_VERTEX_INPUT_RATE_VERTEX}};
-
-    VkVertexInputAttributeDescription vertex_attributes[] = {
-        {0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0},
-    };
-
-    r.pipeline = pipeline_create(ldevice, &r.desc_set, r.render_pass, shaders, ARR_COUNT(shaders), vertex_bindings,
-                                 ARR_COUNT(vertex_bindings), vertex_attributes, ARR_COUNT(vertex_attributes), VK_CULL_MODE_BACK_BIT);
-
-    return r;
-}
-
-void
-scene_renderer_destroy(Device *ldevice, SceneRenderer *r)
-{
-    pipeline_destroy(ldevice, &r->pipeline);
-    descriptor_set_destroy(ldevice, &r->desc_set);
-    frame_buffer_destroy(ldevice, r->framebuffer);
-    render_pass_destroy(ldevice, r->render_pass);
-    texture_destroy(ldevice, &r->color_image);
-    texture_destroy(ldevice, &r->depth_image);
-}
-
 struct Postprocess {
     DescriptorSet desc_set;
     Pipeline      pipeline;
@@ -149,8 +47,8 @@ postprocess_create(Device *ldevice, VkRenderPass render_pass, Texture *target_te
     p.desc_set                           = descriptor_set_create(ldevice, &binding, 1);
 
     Shader shaders[] = {
-        {"shaders/pass.spv", VK_SHADER_STAGE_VERTEX_BIT},
-        {"shaders/post.spv", VK_SHADER_STAGE_FRAGMENT_BIT},
+        {"assets/shaders/pass.spv", VK_SHADER_STAGE_VERTEX_BIT},
+        {"assets/shaders/post.spv", VK_SHADER_STAGE_FRAGMENT_BIT},
     };
 
     p.pipeline = pipeline_create(ldevice, &p.desc_set, render_pass, shaders, ARR_COUNT(shaders), 0, 0, 0, 0, VK_CULL_MODE_NONE);
@@ -173,6 +71,9 @@ postprocess_destroy(Device *ldevice, Postprocess *p)
     pipeline_destroy(ldevice, &p->pipeline);
     descriptor_set_destroy(ldevice, &p->desc_set);
 }
+
+struct Camera {
+};
 
 struct ResizeInfo {
     Swapchain     *sc;
@@ -267,6 +168,9 @@ main(int argc, char *argv[])
     SceneRenderer scene_renderer = scene_renderer_create(pdevice, &ldevice, &swapchain, cmd_pool, depth_image.format);
     Postprocess   postprocess    = postprocess_create(&ldevice, present_render_pass, &scene_renderer.color_image);
 
+    Model model = {};
+    model_load(pdevice, &ldevice, cmd_pool, &model, "assets/models/cube.obj");
+
     VkDescriptorPool imgui_desc_pool = gui_init(window, instance, pdevice, &ldevice, swapchain.image_count, present_render_pass, cmd_pool);
 
     ResizeInfo resize_info     = {0};
@@ -280,22 +184,6 @@ main(int argc, char *argv[])
 
     glfwSetWindowUserPointer(window, &resize_info);
     glfwSetFramebufferSizeCallback(window, resize_callback);
-
-    const float vertices[] = {
-        -1.0f, -1.0f, 0.0f, // bottom left
-        1.0f,  -1.0f, 0.0f, // bottom right
-        0.0f,  1.0f,  0.0f, // top
-    };
-
-    const uint32_t indices[] = {
-        0,
-        1,
-        2,
-    };
-
-    Buffer vertex_buffer =
-        buffer_create(pdevice, &ldevice, cmd_pool, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, (void *)vertices, sizeof(vertices));
-    Buffer index_buffer = buffer_create(pdevice, &ldevice, cmd_pool, VK_BUFFER_USAGE_INDEX_BUFFER_BIT, (void *)indices, sizeof(indices));
 
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
@@ -312,34 +200,7 @@ main(int argc, char *argv[])
         clear_colors[1].depthStencil = {1.0f, 0};
 
         // Scene
-        {
-            VkRenderPassBeginInfo begin_info = {VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO};
-            begin_info.clearValueCount       = 2;
-            begin_info.pClearValues          = clear_colors;
-            begin_info.renderPass            = scene_renderer.render_pass;
-            begin_info.framebuffer           = scene_renderer.framebuffer;
-            begin_info.renderArea            = {{0, 0}, {swapchain.width, swapchain.height}};
-
-            // Rendering Scene
-            vkCmdBeginRenderPass(cmd_buf, &begin_info, VK_SUBPASS_CONTENTS_INLINE);
-
-            VkViewport viewport{0.0f, 0.0f, swapchain.width, swapchain.height, 0.0f, 1.0f};
-            vkCmdSetViewport(cmd_buf, 0, 1, &viewport);
-
-            VkRect2D scissor{{0, 0}, {swapchain.width, swapchain.height}};
-            vkCmdSetScissor(cmd_buf, 0, 1, &scissor);
-
-            vkCmdBindPipeline(cmd_buf, VK_PIPELINE_BIND_POINT_GRAPHICS, scene_renderer.pipeline.handle);
-            vkCmdBindDescriptorSets(cmd_buf, VK_PIPELINE_BIND_POINT_GRAPHICS, scene_renderer.pipeline.layout, 0, 1,
-                                    &scene_renderer.desc_set.handle, 0, 0);
-
-            VkDeviceSize offset = 0;
-            vkCmdBindVertexBuffers(cmd_buf, 0, 1, &vertex_buffer.handle, &offset);
-            vkCmdBindIndexBuffer(cmd_buf, index_buffer.handle, offset, VK_INDEX_TYPE_UINT32);
-            vkCmdDrawIndexed(cmd_buf, 3, 1, 0, 0, 0);
-
-            vkCmdEndRenderPass(cmd_buf);
-        }
+        scene_renderer_render(&swapchain, cmd_buf, &scene_renderer, &model, 1, clear_colors);
 
         // Render UI
         {
@@ -376,8 +237,7 @@ main(int argc, char *argv[])
 
     vkDestroyDescriptorPool(ldevice.handle, imgui_desc_pool, 0);
 
-    buffer_destroy(&ldevice, &vertex_buffer);
-    buffer_destroy(&ldevice, &index_buffer);
+    model_free(&ldevice, &model);
     postprocess_destroy(&ldevice, &postprocess);
     scene_renderer_destroy(&ldevice, &scene_renderer);
     command_buffers_free(&ldevice, cmd_pool, &cmd_bufs);

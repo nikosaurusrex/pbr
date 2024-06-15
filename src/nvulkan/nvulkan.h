@@ -1,13 +1,10 @@
 #pragma once
 
-#include <stdio.h>
-#include <stdlib.h>
+#include "common.h"
 
 #include <vulkan/vulkan.h>
 
 #include <GLFW/glfw3.h>
-
-#define ARR_COUNT(x) ((sizeof(x) / sizeof(*x)))
 
 #define VK_CHECK(call)                                                                                                                     \
     if (call != VK_SUCCESS) {                                                                                                              \

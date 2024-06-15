@@ -38,6 +38,13 @@ project "pbr"
 		"src/nvulkan/**.c",
 		"src/gui/**.h",
 		"src/gui/**.cpp",
+		"src/models/**.h",
+		"src/models/**.c",
+		"src/models/**.cpp",
+		"src/math/**.h",
+		"src/math/**.c",
+		"src/hl/**.h",
+		"src/hl/**.c",
 	}
 
   includedirs
