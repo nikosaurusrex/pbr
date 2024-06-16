@@ -58,9 +58,9 @@ scene_renderer_create(VkPhysicalDevice pdevice, Device *ldevice, Swapchain *sc, 
     r.pipeline = pipeline_create(ldevice, &r.desc_set, r.render_pass, shaders, ARR_COUNT(shaders), vertex_bindings,
                                  ARR_COUNT(vertex_bindings), vertex_attributes, ARR_COUNT(vertex_attributes), VK_CULL_MODE_BACK_BIT);
 
-    float null_uniforms[sizeof(Matrix4f)] = {0};
+    float null_uniforms[sizeof(GlobalUniforms)] = {0};
     r.uniforms = buffer_create(pdevice, ldevice, cmd_pool, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-                               null_uniforms, sizeof(Matrix4f));
+                               null_uniforms, sizeof(GlobalUniforms));
 
     VkDescriptorBufferInfo buffer_desc = {r.uniforms.handle, 0, VK_WHOLE_SIZE};
 
@@ -124,28 +124,25 @@ scene_renderer_render(Swapchain *sc, VkCommandBuffer cmd_buf, SceneRenderer *r, 
 }
 
 void
-scene_renderer_update_uniforms(SceneRenderer *r, VkCommandBuffer cmd_buf, Matrix4f *proj_matrix)
+scene_renderer_update_uniforms(SceneRenderer *r, VkCommandBuffer cmd_buf, GlobalUniforms *uniforms)
 {
-    // Ensure that the modified UBO is not visible to previous frames.
     VkBufferMemoryBarrier beforeBarrier = {VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER};
     beforeBarrier.srcAccessMask         = VK_ACCESS_SHADER_READ_BIT;
     beforeBarrier.dstAccessMask         = VK_ACCESS_TRANSFER_WRITE_BIT;
     beforeBarrier.buffer                = r->uniforms.handle;
     beforeBarrier.offset                = 0;
-    beforeBarrier.size                  = sizeof(Matrix4f);
+    beforeBarrier.size                  = sizeof(GlobalUniforms);
     vkCmdPipelineBarrier(cmd_buf, VK_PIPELINE_STAGE_VERTEX_SHADER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_DEPENDENCY_DEVICE_GROUP_BIT, 0, 0,
                          1, &beforeBarrier, 0, 0);
 
-    // Schedule the host-to-device upload
-    vkCmdUpdateBuffer(cmd_buf, r->uniforms.handle, 0, sizeof(Matrix4f), proj_matrix);
+    vkCmdUpdateBuffer(cmd_buf, r->uniforms.handle, 0, sizeof(GlobalUniforms), uniforms);
 
-    // Making sure the updated UBO will be visible.
     VkBufferMemoryBarrier afterBarrier = {VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER};
     afterBarrier.srcAccessMask         = VK_ACCESS_TRANSFER_WRITE_BIT;
     afterBarrier.dstAccessMask         = VK_ACCESS_SHADER_READ_BIT;
     afterBarrier.buffer                = r->uniforms.handle;
     afterBarrier.offset                = 0;
-    afterBarrier.size                  = sizeof(Matrix4f);
+    afterBarrier.size                  = sizeof(GlobalUniforms);
     vkCmdPipelineBarrier(cmd_buf, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_VERTEX_SHADER_BIT, VK_DEPENDENCY_DEVICE_GROUP_BIT, 0, 0,
                          1, &afterBarrier, 0, 0);
 };

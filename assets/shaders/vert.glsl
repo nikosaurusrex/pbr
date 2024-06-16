@@ -6,6 +6,7 @@ layout(location = 2) in vec3 i_normals;
 
 layout(binding = 0) uniform globals {
 	mat4 proj_matrix;
+	mat4 view_matrix;
 };
 
 out gl_PerVertex {
@@ -13,5 +14,5 @@ out gl_PerVertex {
 };
 
 void main() {
-	gl_Position = proj_matrix * vec4(i_position, 1.0);	
+	gl_Position = proj_matrix * view_matrix * vec4(i_position, 1.0);	
 }

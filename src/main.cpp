@@ -4,8 +4,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <vector>
-
 #include "imgui.h"
 
 #include <GLFW/glfw3.h>
@@ -13,6 +11,9 @@
 #include "gui/vulkan_imgui.h"
 #include "models/models.h"
 #include "nvulkan/nvulkan.h"
+
+#include "hl/input.h"
+#include "hl/camera.h"
 
 // Keep this here so we know later where we have to use it
 static VkAllocationCallbacks *g_allocator = 0;
@@ -72,9 +73,6 @@ postprocess_destroy(Device *ldevice, Postprocess *p)
     descriptor_set_destroy(ldevice, &p->desc_set);
 }
 
-struct Camera {
-};
-
 struct ResizeInfo {
     Swapchain     *sc;
     VkCommandPool  cmd_pool;
@@ -83,6 +81,7 @@ struct ResizeInfo {
     VkRenderPass   render_pass;
     SceneRenderer *scene_renderer;
     Postprocess   *postprocess;
+    Camera        *camera;
 };
 
 void
@@ -121,6 +120,9 @@ resize_callback(GLFWwindow *window, int width, int height)
     desc_write.pImageInfo           = &info->scene_renderer->color_image.descriptor;
 
     vkUpdateDescriptorSets(ldevice->handle, 1, &desc_write, 0, 0);
+
+    // resize camera
+    camera_resize(info->camera, width, height);
 }
 
 int
@@ -136,6 +138,11 @@ main(int argc, char *argv[])
     GLFWwindow *window = glfwCreateWindow(1280, 720, "raytracer", 0, 0);
     if (!window) {
         log_fatal("Failed to create window!");
+    }
+
+    bool raw_mouse_input = glfwRawMouseMotionSupported();
+    if (raw_mouse_input) {
+        glfwSetInputMode(window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
     }
 
     uint32_t     req_extension_count;
@@ -168,13 +175,17 @@ main(int argc, char *argv[])
     SceneRenderer scene_renderer = scene_renderer_create(pdevice, &ldevice, &swapchain, cmd_pool, depth_image.format);
     Postprocess   postprocess    = postprocess_create(&ldevice, present_render_pass, &scene_renderer.color_image);
 
+    VkDescriptorPool imgui_desc_pool = gui_init(window, instance, pdevice, &ldevice, swapchain.image_count, present_render_pass, cmd_pool);
+
     Model model = {};
     model_load(pdevice, &ldevice, cmd_pool, &model, "assets/models/cube.obj");
 
-    Matrix4f proj_matrix;
-    mat4_perspective(&proj_matrix, 1.22, (float)swapchain.width / (float)swapchain.height, 0.1f, 100.0f);
+    Input input;
+    input_init(&input, window);
 
-    VkDescriptorPool imgui_desc_pool = gui_init(window, instance, pdevice, &ldevice, swapchain.image_count, present_render_pass, cmd_pool);
+    Camera camera;
+    camera_init(&camera, vec3(0.0, 0.0, 0.0));
+    camera_resize(&camera, swapchain.width, swapchain.height);
 
     ResizeInfo resize_info     = {0};
     resize_info.cmd_pool       = cmd_pool;
@@ -184,16 +195,32 @@ main(int argc, char *argv[])
     resize_info.render_pass    = present_render_pass;
     resize_info.scene_renderer = &scene_renderer;
     resize_info.postprocess    = &postprocess;
+    resize_info.camera         = &camera;
 
     glfwSetWindowUserPointer(window, &resize_info);
     glfwSetFramebufferSizeCallback(window, resize_callback);
 
+    float last_frame_time = glfwGetTime();
+
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
 
+        // calculate delta
+        float current_frame_time = glfwGetTime();
+        float delta_frame_time   = current_frame_time - last_frame_time;
+        last_frame_time          = current_frame_time;
+    
+        printf("%p %d %d\n", window, GLFW_KEY_LEFT_SHIFT, glfwGetKey(window, GLFW_KEY_LEFT_SHIFT));
+
+        // update input and camera
+        input_update(&input);
+        camera_update(&camera, &input, delta_frame_time);
+
+        // render imgui windows
         gui_new_frame();
         gui_render();
 
+        // acquiring image from swapchain and command buffer for frame
         uint32_t        current_image = swapchain_acquire(&swapchain);
         VkCommandBuffer cmd_buf       = cmd_bufs.handles[current_image];
         command_buffer_begin(cmd_buf);
@@ -202,8 +229,9 @@ main(int argc, char *argv[])
         clear_colors[0].color        = {{0.0f, 0.0f, 0.0f, 1.0f}};
         clear_colors[1].depthStencil = {1.0f, 0};
 
-        // Scene 
-        scene_renderer_update_uniforms(&scene_renderer, cmd_buf, &proj_matrix);
+        // Scene
+        GlobalUniforms uniforms = {camera.projection, camera.view};
+        scene_renderer_update_uniforms(&scene_renderer, cmd_buf, &uniforms);
         scene_renderer_render(&swapchain, cmd_buf, &scene_renderer, &model, 1, clear_colors);
 
         // Render UI
@@ -233,6 +261,7 @@ main(int argc, char *argv[])
             vkCmdEndRenderPass(cmd_buf);
         }
 
+        // present render imaged and end frame
         command_buffer_end(cmd_buf);
         swapchain_present(&swapchain, &cmd_bufs);
     }
