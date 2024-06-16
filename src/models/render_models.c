@@ -35,7 +35,11 @@ scene_renderer_create(VkPhysicalDevice pdevice, Device *ldevice, Swapchain *sc, 
     r.framebuffer = frame_buffer_create(sc, r.render_pass, r.color_image.image.view, r.depth_image.image.view);
 
     // Create descriptor set
-    r.desc_set = descriptor_set_create(ldevice, 0, 0);
+    VkDescriptorSetLayoutBinding bindings[] = {
+        {0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT, 0},
+    };
+
+    r.desc_set = descriptor_set_create(ldevice, bindings, ARR_COUNT(bindings));
 
     // Setup graphics pipeline
     Shader shaders[] = {
@@ -54,12 +58,28 @@ scene_renderer_create(VkPhysicalDevice pdevice, Device *ldevice, Swapchain *sc, 
     r.pipeline = pipeline_create(ldevice, &r.desc_set, r.render_pass, shaders, ARR_COUNT(shaders), vertex_bindings,
                                  ARR_COUNT(vertex_bindings), vertex_attributes, ARR_COUNT(vertex_attributes), VK_CULL_MODE_BACK_BIT);
 
+    float null_uniforms[sizeof(Matrix4f)] = {0};
+    r.uniforms = buffer_create(pdevice, ldevice, cmd_pool, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+                               null_uniforms, sizeof(Matrix4f));
+
+    VkDescriptorBufferInfo buffer_desc = {r.uniforms.handle, 0, VK_WHOLE_SIZE};
+
+    VkWriteDescriptorSet desc_write = {VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET};
+    desc_write.dstSet               = r.desc_set.handle;
+    desc_write.dstBinding           = 0;
+    desc_write.descriptorCount      = 1;
+    desc_write.descriptorType       = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    desc_write.pBufferInfo          = &buffer_desc;
+
+    vkUpdateDescriptorSets(ldevice->handle, 1, &desc_write, 0, 0);
+
     return r;
 }
 
 void
 scene_renderer_destroy(Device *ldevice, SceneRenderer *r)
 {
+    buffer_destroy(ldevice, &r->uniforms);
     pipeline_destroy(ldevice, &r->pipeline);
     descriptor_set_destroy(ldevice, &r->desc_set);
     frame_buffer_destroy(ldevice, r->framebuffer);
@@ -102,3 +122,30 @@ scene_renderer_render(Swapchain *sc, VkCommandBuffer cmd_buf, SceneRenderer *r, 
 
     vkCmdEndRenderPass(cmd_buf);
 }
+
+void
+scene_renderer_update_uniforms(SceneRenderer *r, VkCommandBuffer cmd_buf, Matrix4f *proj_matrix)
+{
+    // Ensure that the modified UBO is not visible to previous frames.
+    VkBufferMemoryBarrier beforeBarrier = {VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER};
+    beforeBarrier.srcAccessMask         = VK_ACCESS_SHADER_READ_BIT;
+    beforeBarrier.dstAccessMask         = VK_ACCESS_TRANSFER_WRITE_BIT;
+    beforeBarrier.buffer                = r->uniforms.handle;
+    beforeBarrier.offset                = 0;
+    beforeBarrier.size                  = sizeof(Matrix4f);
+    vkCmdPipelineBarrier(cmd_buf, VK_PIPELINE_STAGE_VERTEX_SHADER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_DEPENDENCY_DEVICE_GROUP_BIT, 0, 0,
+                         1, &beforeBarrier, 0, 0);
+
+    // Schedule the host-to-device upload
+    vkCmdUpdateBuffer(cmd_buf, r->uniforms.handle, 0, sizeof(Matrix4f), proj_matrix);
+
+    // Making sure the updated UBO will be visible.
+    VkBufferMemoryBarrier afterBarrier = {VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER};
+    afterBarrier.srcAccessMask         = VK_ACCESS_TRANSFER_WRITE_BIT;
+    afterBarrier.dstAccessMask         = VK_ACCESS_SHADER_READ_BIT;
+    afterBarrier.buffer                = r->uniforms.handle;
+    afterBarrier.offset                = 0;
+    afterBarrier.size                  = sizeof(Matrix4f);
+    vkCmdPipelineBarrier(cmd_buf, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_VERTEX_SHADER_BIT, VK_DEPENDENCY_DEVICE_GROUP_BIT, 0, 0,
+                         1, &afterBarrier, 0, 0);
+};

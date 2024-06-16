@@ -31,6 +31,7 @@ struct SceneRenderer {
     VkFramebuffer framebuffer;
     DescriptorSet desc_set;
     Pipeline      pipeline;
+    Buffer        uniforms;
 };
 
 void model_load(VkPhysicalDevice pdevice, Device *ldevice, VkCommandPool cmd_pool, Model *m, const char *path);
@@ -41,6 +42,7 @@ SceneRenderer scene_renderer_create(VkPhysicalDevice pdevice, Device *ldevice, S
 void          scene_renderer_destroy(Device *ldevice, SceneRenderer *r);
 void          scene_renderer_render(Swapchain *sc, VkCommandBuffer cmd_buf, SceneRenderer *r, Model *models, uint32_t model_count,
                                     VkClearValue *clear_colors);
+void          scene_renderer_update_uniforms(SceneRenderer *r, VkCommandBuffer cmd_buf, Matrix4f *proj_matrix);
 
 #ifdef __cplusplus
 }

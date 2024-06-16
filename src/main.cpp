@@ -171,6 +171,9 @@ main(int argc, char *argv[])
     Model model = {};
     model_load(pdevice, &ldevice, cmd_pool, &model, "assets/models/cube.obj");
 
+    Matrix4f proj_matrix;
+    mat4_perspective(&proj_matrix, 1.22, (float)swapchain.width / (float)swapchain.height, 0.1f, 100.0f);
+
     VkDescriptorPool imgui_desc_pool = gui_init(window, instance, pdevice, &ldevice, swapchain.image_count, present_render_pass, cmd_pool);
 
     ResizeInfo resize_info     = {0};
@@ -199,7 +202,8 @@ main(int argc, char *argv[])
         clear_colors[0].color        = {{0.0f, 0.0f, 0.0f, 1.0f}};
         clear_colors[1].depthStencil = {1.0f, 0};
 
-        // Scene
+        // Scene 
+        scene_renderer_update_uniforms(&scene_renderer, cmd_buf, &proj_matrix);
         scene_renderer_render(&swapchain, cmd_buf, &scene_renderer, &model, 1, clear_colors);
 
         // Render UI
