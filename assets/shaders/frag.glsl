@@ -34,5 +34,11 @@ layout(std140, set=0, binding=2) readonly buffer ModelDescriptionsBuffer {
 layout(buffer_reference, scalar) buffer MaterialIndices {int i[]; }; 
 
 void main() {
-	o_color = vec4(0.0, 1.0, 0.0, 1.0);
+    ModelDescription description = modelDescriptionsBuffer.descriptions[0];
+    MaterialIndices material_indices = MaterialIndices(description.material_indices_address);
+
+    int mat_index = material_indices.i[gl_PrimitiveID];
+    Material material = materialsBuffer.materials[mat_index];
+
+	o_color = vec4(material.diffuse.xyz, 1.0);
 }

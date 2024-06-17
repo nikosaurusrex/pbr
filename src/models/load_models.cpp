@@ -5,13 +5,15 @@
 #define TINYOBJLOADER_IMPLEMENTATION
 #include <tiny_obj_loader.h>
 
-void
+ModelDescriptor
 model_load(VkPhysicalDevice pdevice, Device *ldevice, VkCommandPool cmd_pool, Model *m, Materials *materials, const char *path)
 {
-    uint32_t  vertex_count = 0;
-    Vertex   *vertices     = 0;
-    uint32_t  index_count  = 0;
-    uint32_t *indices      = 0;
+    uint32_t  vertex_count         = 0;
+    Vertex   *vertices             = 0;
+    uint32_t  index_count          = 0;
+    uint32_t *indices              = 0;
+    uint32_t  material_index_count = 0;
+    uint32_t *material_indices     = 0;
 
     tinyobj::ObjReader reader;
     reader.ParseFromFile(path);
@@ -51,6 +53,12 @@ model_load(VkPhysicalDevice pdevice, Device *ldevice, VkCommandPool cmd_pool, Mo
     for (const auto &shape : reader.GetShapes()) {
         vertices = (Vertex *)realloc(vertices, (shape.mesh.indices.size() + vertex_count) * sizeof(Vertex));
         indices  = (uint32_t *)realloc(indices, (shape.mesh.indices.size() + index_count) * sizeof(uint32_t));
+        material_indices =
+            (uint32_t *)realloc(material_indices, (shape.mesh.material_ids.size() + material_index_count) * sizeof(uint32_t));
+
+        for (uint32_t i = 0; i < shape.mesh.material_ids.size(); i++) {
+            material_indices[material_index_count + i] = mat_index_map[shape.mesh.material_ids[i]];
+        }
 
         uint32_t vertex_index  = vertex_count;
         uint32_t indices_index = index_count;
@@ -75,13 +83,30 @@ model_load(VkPhysicalDevice pdevice, Device *ldevice, VkCommandPool cmd_pool, Mo
 
         vertex_count += shape.mesh.indices.size();
         index_count += shape.mesh.indices.size();
+        material_index_count += shape.mesh.material_ids.size();
     }
 
     m->vertex_buffer =
         buffer_create(pdevice, ldevice, cmd_pool, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, (void *)vertices, vertex_count * sizeof(Vertex));
     m->index_buffer =
         buffer_create(pdevice, ldevice, cmd_pool, VK_BUFFER_USAGE_INDEX_BUFFER_BIT, (void *)indices, index_count * sizeof(uint32_t));
+    m->material_index_buffer =
+        buffer_create(pdevice, ldevice, cmd_pool, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
+                      (void *)material_indices, material_index_count * sizeof(uint32_t));
     m->index_count = index_count;
+
+    free(vertices);
+    free(indices);
+    free(material_indices);
+
+    ModelDescriptor descriptor = {};
+
+    VkBufferDeviceAddressInfo address_info = {VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO_KHR};
+    address_info.buffer                    = m->material_index_buffer.handle;
+
+    descriptor.material_index_buffer_address = vkGetBufferDeviceAddress(ldevice->handle, &address_info);
+
+    return descriptor;
 }
 
 void
@@ -89,4 +114,5 @@ model_free(Device *ldevice, Model *m)
 {
     buffer_destroy(ldevice, &m->vertex_buffer);
     buffer_destroy(ldevice, &m->index_buffer);
+    buffer_destroy(ldevice, &m->material_index_buffer);
 }

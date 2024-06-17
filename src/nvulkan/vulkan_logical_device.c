@@ -49,6 +49,7 @@ logical_device_create(VkSurfaceKHR surface, VkPhysicalDevice pdevice, const char
 
     VkPhysicalDeviceFeatures features_core = {0};
     features_core.shaderInt64 = VK_TRUE;
+    features_core.geometryShader = VK_TRUE;
 
     VkDeviceCreateInfo create_info      = {VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO};
     create_info.queueCreateInfoCount    = ARR_COUNT(queue_create_infos);

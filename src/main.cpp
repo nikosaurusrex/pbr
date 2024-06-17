@@ -194,10 +194,13 @@ main(int argc, char *argv[])
     Materials materials = {};
     materials_init(&materials);
 
-    Model model = {};
-    model_load(pdevice, &ldevice, cmd_pool, &model, &materials, "assets/models/cube.obj");
-    
+    Model           model      = {};
+    ModelDescriptor model_desc = model_load(pdevice, &ldevice, cmd_pool, &model, &materials, "assets/models/cube.obj");
+
+    // after loading models when we know which materials are used
     materials_write_descriptors(pdevice, &ldevice, cmd_pool, &scene_renderer.desc_set, &materials);
+
+    models_write_descriptors(pdevice, &ldevice, cmd_pool, &scene_renderer.desc_set, &model_desc, 1);
 
     Input input;
     input_init(&input, window);
@@ -293,7 +296,7 @@ main(int argc, char *argv[])
     vkDestroyDescriptorPool(ldevice.handle, imgui_desc_pool, 0);
 
     model_free(&ldevice, &model);
-    materials_free(&materials);
+    materials_free(&ldevice, &materials);
     postprocess_destroy(&ldevice, &postprocess);
     scene_renderer_destroy(&ldevice, &scene_renderer);
     command_buffers_free(&ldevice, cmd_pool, &cmd_bufs);

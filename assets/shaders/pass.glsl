@@ -7,6 +7,7 @@ out gl_PerVertex {
 };
 
 void main() {
+	// @Todo optimize this
 	float x = -1.0 + float((gl_VertexIndex & 1) << 2);
     float y = -1.0 + float((gl_VertexIndex & 2) << 1);
 

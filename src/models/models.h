@@ -7,12 +7,13 @@
 #include "math/math.h"
 
 #ifndef __cplusplus
-typedef struct GlobalUniforms GlobalUniforms;
-typedef struct Vertex         Vertex;
-typedef struct Material       Material;
-typedef struct Materials      Materials;
-typedef struct Model          Model;
-typedef struct SceneRenderer  SceneRenderer;
+typedef struct GlobalUniforms  GlobalUniforms;
+typedef struct Vertex          Vertex;
+typedef struct Material        Material;
+typedef struct Materials       Materials;
+typedef struct ModelDescriptor ModelDescriptor;
+typedef struct Model           Model;
+typedef struct SceneRenderer   SceneRenderer;
 #else
 extern "C" {
 #endif
@@ -28,8 +29,7 @@ struct Vertex {
     Vec3 normal;
 };
 
-struct Material
-{
+struct Material {
     Vec4  ambient;
     Vec4  diffuse;
     Vec4  specular;
@@ -49,9 +49,14 @@ struct Materials {
     Buffer       buffer;
 };
 
+struct ModelDescriptor {
+    uint64_t material_index_buffer_address;
+};
+
 struct Model {
     Buffer   vertex_buffer;
     Buffer   index_buffer;
+    Buffer   material_index_buffer;
     uint32_t index_count;
 };
 
@@ -69,12 +74,16 @@ void     materials_init(Materials *materials);
 uint32_t materials_add(Materials *materials, const char *name, Material mat);
 uint8_t  materials_has(Materials *materials, const char *name);
 uint32_t materials_get_index(Materials *materials, const char *name);
-void     materials_free(Materials *materials);
+void     materials_free(Device *ldevice, Materials *materials);
 void     materials_write_descriptors(VkPhysicalDevice pdevice, Device *ldevice, VkCommandPool cmd_pool, DescriptorSet *desc_set,
                                      Materials *materials);
 
-void model_load(VkPhysicalDevice pdevice, Device *ldevice, VkCommandPool cmd_pool, Model *m, Materials *materials, const char *path);
-void model_free(Device *ldevice, Model *m);
+ModelDescriptor model_load(VkPhysicalDevice pdevice, Device *ldevice, VkCommandPool cmd_pool, Model *m, Materials *materials,
+                           const char *path);
+void            model_free(Device *ldevice, Model *m);
+
+void models_write_descriptors(VkPhysicalDevice pdevice, Device *ldevice, VkCommandPool cmd_pool, DescriptorSet *desc_set,
+                              ModelDescriptor *descriptors, uint32_t descriptor_count);
 
 SceneRenderer scene_renderer_create(VkPhysicalDevice pdevice, Device *ldevice, Swapchain *sc, VkCommandPool cmd_pool,
                                     VkFormat depth_format);

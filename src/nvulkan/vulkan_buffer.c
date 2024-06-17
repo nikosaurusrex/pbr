@@ -21,6 +21,13 @@ buffer_create_internal(VkPhysicalDevice pdevice, Device *ldevice, VkDeviceSize s
     alloc_info.allocationSize       = mem_reqs.size;
     alloc_info.memoryTypeIndex      = memory_type_find(pdevice, mem_reqs.memoryTypeBits, properties);
 
+    if ((usage & VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT) != 0) {
+        VkMemoryAllocateFlagsInfo alloc_flags = {VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_FLAGS_INFO};
+        alloc_flags.flags                       = VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT;
+
+        alloc_info.pNext = &alloc_flags;
+    }
+
     VK_CHECK(vkAllocateMemory(ldevice->handle, &alloc_info, g_allocator, memory) != VK_SUCCESS);
 
     vkBindBufferMemory(ldevice->handle, *buffer, *memory, 0);

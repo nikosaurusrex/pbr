@@ -6,7 +6,7 @@
 void
 materials_init(Materials *materials)
 {
-    *materials = (Materials){.names = 0, .materials = 0, .count = 0, .capacity = 1};
+    *materials = (Materials){.names = 0, .materials = 0, .count = 0, .capacity = 1, .buffer = {0}};
 
     materials_add(materials, "default",
                   (Material){.ambient       = {0.1f, 0.1f, 0.1f, 1.0f},
@@ -65,16 +65,22 @@ materials_get_index(Materials *materials, const char *name)
 }
 
 void
-materials_free(Materials *materials)
+materials_free(Device *ldevice, Materials *materials)
 {
     free(materials->materials);
     free(materials->names);
+
+    // @Todo: destroy buffer but crashes
 }
 
 void
 materials_write_descriptors(VkPhysicalDevice pdevice, Device *ldevice, VkCommandPool cmd_pool, DescriptorSet *desc_set,
                             Materials *materials)
 {
+    if (materials->buffer.handle != VK_NULL_HANDLE) {
+        buffer_destroy(ldevice, &materials->buffer);
+    }
+
     uint32_t size = materials->count * sizeof(Material);
 
     materials->buffer = buffer_create(pdevice, ldevice, cmd_pool, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
