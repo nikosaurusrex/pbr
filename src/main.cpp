@@ -12,11 +12,12 @@
 #include "models/models.h"
 #include "nvulkan/nvulkan.h"
 
-#include "hl/input.h"
 #include "hl/camera.h"
+#include "hl/input.h"
 
 // Keep this here so we know later where we have to use it
 static VkAllocationCallbacks *g_allocator = 0;
+static bool                   g_show_gui  = false;
 
 static void
 check_vk_result(VkResult err)
@@ -73,7 +74,7 @@ postprocess_destroy(Device *ldevice, Postprocess *p)
     descriptor_set_destroy(ldevice, &p->desc_set);
 }
 
-struct ResizeInfo {
+struct WindowPointerInfo {
     Swapchain     *sc;
     VkCommandPool  cmd_pool;
     Image         *depth_buffer;
@@ -82,12 +83,13 @@ struct ResizeInfo {
     SceneRenderer *scene_renderer;
     Postprocess   *postprocess;
     Camera        *camera;
+    Input         *input;
 };
 
 void
 resize_callback(GLFWwindow *window, int width, int height)
 {
-    ResizeInfo *info = (ResizeInfo *)glfwGetWindowUserPointer(window);
+    WindowPointerInfo *info = (WindowPointerInfo *)glfwGetWindowUserPointer(window);
 
     Swapchain       *sc      = info->sc;
     Device          *ldevice = info->sc->ldevice;
@@ -123,6 +125,18 @@ resize_callback(GLFWwindow *window, int width, int height)
 
     // resize camera
     camera_resize(info->camera, width, height);
+}
+
+void
+key_callback(GLFWwindow *window, int key, int scancode, int action, int mods)
+{
+    WindowPointerInfo *info = (WindowPointerInfo *)glfwGetWindowUserPointer(window);
+
+    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
+        g_show_gui = !g_show_gui;
+
+        info->input->locked = g_show_gui;
+    }
 }
 
 int
@@ -187,18 +201,20 @@ main(int argc, char *argv[])
     camera_init(&camera, vec3(0.0, 0.0, 0.0));
     camera_resize(&camera, swapchain.width, swapchain.height);
 
-    ResizeInfo resize_info     = {0};
-    resize_info.cmd_pool       = cmd_pool;
-    resize_info.sc             = &swapchain;
-    resize_info.depth_buffer   = &depth_image;
-    resize_info.frame_buffers  = &frame_buffers;
-    resize_info.render_pass    = present_render_pass;
-    resize_info.scene_renderer = &scene_renderer;
-    resize_info.postprocess    = &postprocess;
-    resize_info.camera         = &camera;
+    WindowPointerInfo wp_info = {0};
+    wp_info.cmd_pool          = cmd_pool;
+    wp_info.sc                = &swapchain;
+    wp_info.depth_buffer      = &depth_image;
+    wp_info.frame_buffers     = &frame_buffers;
+    wp_info.render_pass       = present_render_pass;
+    wp_info.scene_renderer    = &scene_renderer;
+    wp_info.postprocess       = &postprocess;
+    wp_info.camera            = &camera;
+    wp_info.input             = &input;
 
-    glfwSetWindowUserPointer(window, &resize_info);
+    glfwSetWindowUserPointer(window, &wp_info);
     glfwSetFramebufferSizeCallback(window, resize_callback);
+    glfwSetKeyCallback(window, key_callback);
 
     float last_frame_time = glfwGetTime();
 
@@ -209,8 +225,6 @@ main(int argc, char *argv[])
         float current_frame_time = glfwGetTime();
         float delta_frame_time   = current_frame_time - last_frame_time;
         last_frame_time          = current_frame_time;
-    
-        printf("%p %d %d\n", window, GLFW_KEY_LEFT_SHIFT, glfwGetKey(window, GLFW_KEY_LEFT_SHIFT));
 
         // update input and camera
         input_update(&input);
@@ -218,7 +232,10 @@ main(int argc, char *argv[])
 
         // render imgui windows
         gui_new_frame();
-        gui_render();
+
+        if (g_show_gui) {
+            gui_render();
+        }
 
         // acquiring image from swapchain and command buffer for frame
         uint32_t        current_image = swapchain_acquire(&swapchain);
