@@ -6,3 +6,4 @@ out.png
 .vscode
 imgui.ini
 fun.py
+*.swp

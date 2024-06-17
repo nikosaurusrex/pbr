@@ -2,6 +2,7 @@
 
 typedef struct Vec2 Vec2;
 typedef union Vec3  Vec3;
+typedef struct Vec4 Vec4;
 typedef struct Mat4 Mat4;
 
 #ifdef __cplusplus
@@ -29,6 +30,13 @@ union Vec3 {
     };
 };
 
+struct Vec4 {
+    float x;
+    float y;
+    float z;
+    float w;
+};
+
 struct Mat4 {
     union {
         float m[16];
@@ -49,6 +57,8 @@ float vec3_length(Vec3 v);
 Vec3  vec3_norm(Vec3 v);
 Vec3  vec3_cross(Vec3 v1, Vec3 v2);
 float vec3_dot(Vec3 v1, Vec3 v2);
+
+Vec4 vec4(float x, float y, float z, float w);
 
 Mat4 mat4_identity(void);
 Mat4 mat4_perspective(float fov, float aspect, float near, float far);

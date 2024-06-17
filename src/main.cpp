@@ -191,8 +191,13 @@ main(int argc, char *argv[])
 
     VkDescriptorPool imgui_desc_pool = gui_init(window, instance, pdevice, &ldevice, swapchain.image_count, present_render_pass, cmd_pool);
 
+    Materials materials = {};
+    materials_init(&materials);
+
     Model model = {};
-    model_load(pdevice, &ldevice, cmd_pool, &model, "assets/models/cube.obj");
+    model_load(pdevice, &ldevice, cmd_pool, &model, &materials, "assets/models/cube.obj");
+    
+    materials_write_descriptors(pdevice, &ldevice, cmd_pool, &scene_renderer.desc_set, &materials);
 
     Input input;
     input_init(&input, window);
@@ -288,6 +293,7 @@ main(int argc, char *argv[])
     vkDestroyDescriptorPool(ldevice.handle, imgui_desc_pool, 0);
 
     model_free(&ldevice, &model);
+    materials_free(&materials);
     postprocess_destroy(&ldevice, &postprocess);
     scene_renderer_destroy(&ldevice, &scene_renderer);
     command_buffers_free(&ldevice, cmd_pool, &cmd_bufs);

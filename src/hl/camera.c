@@ -15,8 +15,8 @@ camera_init(Camera *c, Vec3 look_at)
     c->sensitivity = 0.01f;
     c->look_at     = look_at;
 
-    mat4_identity(&c->projection);
-    mat4_identity(&c->view);
+    c->projection = mat4_identity();
+    c->view = mat4_identity();
 }
 
 void

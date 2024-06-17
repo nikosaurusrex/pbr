@@ -44,8 +44,11 @@ logical_device_create(VkSurfaceKHR surface, VkPhysicalDevice pdevice, const char
             break;
         }
     }
+    VkPhysicalDeviceVulkan12Features features_vulkan12 = {VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES};
+    features_vulkan12.bufferDeviceAddress = VK_TRUE;
 
     VkPhysicalDeviceFeatures features_core = {0};
+    features_core.shaderInt64 = VK_TRUE;
 
     VkDeviceCreateInfo create_info      = {VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO};
     create_info.queueCreateInfoCount    = ARR_COUNT(queue_create_infos);
@@ -55,6 +58,7 @@ logical_device_create(VkSurfaceKHR surface, VkPhysicalDevice pdevice, const char
     create_info.enabledLayerCount       = layer_count;
     create_info.ppEnabledLayerNames     = layers;
     create_info.pEnabledFeatures        = &features_core;
+    create_info.pNext                   = &features_vulkan12;
 
     VkDevice handle;
     VK_CHECK(vkCreateDevice(pdevice, &create_info, g_allocator, &handle));

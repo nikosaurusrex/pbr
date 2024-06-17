@@ -37,6 +37,8 @@ scene_renderer_create(VkPhysicalDevice pdevice, Device *ldevice, Swapchain *sc, 
     // Create descriptor set
     VkDescriptorSetLayoutBinding bindings[] = {
         {0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT, 0},
+        {1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_FRAGMENT_BIT, 0},
+        {2, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_FRAGMENT_BIT, 0},
     };
 
     r.desc_set = descriptor_set_create(ldevice, bindings, ARR_COUNT(bindings));

@@ -1,10 +1,12 @@
 #include "models.h"
 
+#include <unordered_map>
+
 #define TINYOBJLOADER_IMPLEMENTATION
 #include <tiny_obj_loader.h>
 
 void
-model_load(VkPhysicalDevice pdevice, Device *ldevice, VkCommandPool cmd_pool, Model *m, const char *path)
+model_load(VkPhysicalDevice pdevice, Device *ldevice, VkCommandPool cmd_pool, Model *m, Materials *materials, const char *path)
 {
     uint32_t  vertex_count = 0;
     Vertex   *vertices     = 0;
@@ -15,6 +17,36 @@ model_load(VkPhysicalDevice pdevice, Device *ldevice, VkCommandPool cmd_pool, Mo
     reader.ParseFromFile(path);
 
     const tinyobj::attrib_t &attrib = reader.GetAttrib();
+
+    // because we store all materials in a single array, local material index have to be mapped to global material index
+    std::unordered_map<int, uint32_t> mat_index_map = {};
+    mat_index_map.insert({-1, 0}); // means that if no material, then use default material
+
+    uint32_t mat_index = 0;
+    for (const auto &obj_mat : reader.GetMaterials()) {
+        uint32_t existing_index = materials_get_index(materials, obj_mat.name.c_str());
+        if (existing_index != UINT32_MAX) {
+            mat_index_map[mat_index] = existing_index;
+            mat_index++;
+            continue;
+        }
+
+        Material mat = {};
+
+        mat.ambient       = vec4(obj_mat.ambient[0], obj_mat.ambient[1], obj_mat.ambient[2], 1.0f);
+        mat.diffuse       = vec4(obj_mat.diffuse[0], obj_mat.diffuse[1], obj_mat.diffuse[2], 1.0f);
+        mat.specular      = vec4(obj_mat.specular[0], obj_mat.specular[1], obj_mat.specular[2], 1.0f);
+        mat.transmittance = vec4(obj_mat.transmittance[0], obj_mat.transmittance[1], obj_mat.transmittance[2], 1.0f);
+        mat.emission      = vec4(obj_mat.emission[0], obj_mat.emission[1], obj_mat.emission[2], 1.0f);
+        mat.shininess     = obj_mat.shininess;
+        mat.ior           = obj_mat.ior;
+        mat.dissolve      = obj_mat.dissolve;
+        mat.illum         = obj_mat.illum;
+
+        uint32_t index_of_added = materials_add(materials, obj_mat.name.c_str(), mat);
+
+        mat_index_map[mat_index] = index_of_added;
+    }
 
     for (const auto &shape : reader.GetShapes()) {
         vertices = (Vertex *)realloc(vertices, (shape.mesh.indices.size() + vertex_count) * sizeof(Vertex));
