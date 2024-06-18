@@ -9,9 +9,9 @@ mat4_identity(void)
 }
 
 Mat4
-mat4_perspective(float fov, float aspect, float near, float far)
+mat4_perspective(f32 fov, f32 aspect, f32 near, f32 far)
 {
-    float tan_half_fov = tan(fov / 2);
+    f32 tan_half_fov = tan(fov / 2);
 
     Mat4 out = {0};
     out.m00  = 1 / (aspect * tan_half_fov);

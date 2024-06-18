@@ -1,6 +1,5 @@
 #include "models.h"
 
-#include <assert.h>
 #include <string.h>
 
 void
@@ -20,13 +19,13 @@ materials_init(Materials *materials)
                              .illum         = 2});
 }
 
-uint32_t
+u32
 materials_add(Materials *materials, const char *name, Material mat)
 {
-    assert(materials->count < UINT32_MAX);
+    Assert(materials->count < max_u32);
 
     if (materials->count + 1 >= materials->capacity) {
-        assert(materials->capacity < UINT32_MAX / 2);
+        Assert(materials->capacity < max_u32 / 2);
         materials->capacity *= 2;
 
         materials->materials = (Material *)realloc(materials->materials, materials->capacity * sizeof(Material));
@@ -40,10 +39,10 @@ materials_add(Materials *materials, const char *name, Material mat)
     return materials->count - 1;
 }
 
-uint8_t
+u8
 materials_has(Materials *materials, const char *name)
 {
-    for (uint32_t i = 0; i < materials->count; ++i) {
+    for (u32 i = 0; i < materials->count; ++i) {
         if (strcmp(materials->names[i], name) == 0) {
             return 1;
         }
@@ -52,16 +51,16 @@ materials_has(Materials *materials, const char *name)
     return 0;
 }
 
-uint32_t
+u32
 materials_get_index(Materials *materials, const char *name)
 {
-    for (uint32_t i = 0; i < materials->count; ++i) {
+    for (u32 i = 0; i < materials->count; ++i) {
         if (strcmp(materials->names[i], name) == 0) {
             return i;
         }
     }
 
-    return UINT32_MAX;
+    return max_u32;
 }
 
 void
@@ -81,7 +80,7 @@ materials_write_descriptors(VkPhysicalDevice pdevice, Device *ldevice, VkCommand
         buffer_destroy(ldevice, &materials->buffer);
     }
 
-    uint32_t size = materials->count * sizeof(Material);
+    u32 size = materials->count * sizeof(Material);
 
     materials->buffer = buffer_create(pdevice, ldevice, cmd_pool, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
                                       materials->materials, size);

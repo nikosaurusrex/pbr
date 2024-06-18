@@ -4,8 +4,8 @@
 static VkAllocationCallbacks *g_allocator = 0;
 
 VkInstance
-vulkan_instance_create(const char *name, int version, const char **extensions, uint32_t extension_count, const char **layers,
-                       uint32_t layer_count)
+vulkan_instance_create(const char *name, int version, const char **extensions, u32 extension_count, const char **layers,
+                       u32 layer_count)
 {
     VkApplicationInfo application_info = {VK_STRUCTURE_TYPE_APPLICATION_INFO};
     application_info.pApplicationName  = name;

@@ -1,6 +1,5 @@
 #include "nvulkan.h"
 
-#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -8,7 +7,7 @@
 static VkAllocationCallbacks *g_allocator = 0;
 
 Swapchain
-swapchain_create(VkSurfaceKHR surface, VkPhysicalDevice pdevice, Device *ldevice, VkCommandPool cmd_pool, uint32_t image_count)
+swapchain_create(VkSurfaceKHR surface, VkPhysicalDevice pdevice, Device *ldevice, VkCommandPool cmd_pool, u32 image_count)
 {
     Swapchain swapchain = {0};
 
@@ -23,13 +22,13 @@ swapchain_create(VkSurfaceKHR surface, VkPhysicalDevice pdevice, Device *ldevice
         swapchain.image_count = surface_capabilities.maxImageCount;
     }
 
-    uint32_t format_count;
+    u32 format_count;
     vkGetPhysicalDeviceSurfaceFormatsKHR(pdevice, surface, &format_count, 0);
 
     VkSurfaceFormatKHR *formats = malloc(format_count * sizeof(VkSurfaceFormatKHR));
     vkGetPhysicalDeviceSurfaceFormatsKHR(pdevice, surface, &format_count, formats);
 
-    for (uint32_t i = 0; i < format_count; ++i) {
+    for (u32 i = 0; i < format_count; ++i) {
         swapchain.format = formats[i];
         if (formats[i].format == VK_FORMAT_B8G8R8A8_UNORM) {
             break;
@@ -40,7 +39,7 @@ swapchain_create(VkSurfaceKHR surface, VkPhysicalDevice pdevice, Device *ldevice
 
     // Create fences
     swapchain.fences = malloc(swapchain.image_count * sizeof(VkFence));
-    for (uint32_t i = 0; i < swapchain.image_count; ++i) {
+    for (u32 i = 0; i < swapchain.image_count; ++i) {
         VkFenceCreateInfo create_info = {VK_STRUCTURE_TYPE_FENCE_CREATE_INFO};
         create_info.flags             = VK_FENCE_CREATE_SIGNALED_BIT;
         VK_CHECK(vkCreateFence(ldevice->handle, &create_info, g_allocator, &swapchain.fences[i]));
@@ -51,7 +50,7 @@ swapchain_create(VkSurfaceKHR surface, VkPhysicalDevice pdevice, Device *ldevice
 }
 
 void
-swapchain_update(Swapchain *sc, VkCommandPool cmd_pool, uint8_t vsync)
+swapchain_update(Swapchain *sc, VkCommandPool cmd_pool, b8 vsync)
 {
     VkSurfaceKHR     surface       = sc->surface;
     VkSwapchainKHR   old_swapchain = sc->handle;
@@ -61,13 +60,13 @@ swapchain_update(Swapchain *sc, VkCommandPool cmd_pool, uint8_t vsync)
     VkSurfaceCapabilitiesKHR surface_capabilities;
     vkGetPhysicalDeviceSurfaceCapabilitiesKHR(pdevice, surface, &surface_capabilities);
 
-    assert(surface_capabilities.currentExtent.width != (uint32_t)(-1));
+    Assert(surface_capabilities.currentExtent.width != (u32)(-1));
     VkExtent2D extent = surface_capabilities.currentExtent;
     sc->width         = extent.width;
     sc->height        = extent.height;
 
     // Select present mode
-    uint32_t present_mode_count;
+    u32 present_mode_count;
     vkGetPhysicalDeviceSurfacePresentModesKHR(pdevice, surface, &present_mode_count, 0);
 
     VkPresentModeKHR *present_modes = malloc(present_mode_count * sizeof(VkPresentModeKHR));
@@ -75,7 +74,7 @@ swapchain_update(Swapchain *sc, VkCommandPool cmd_pool, uint8_t vsync)
 
     VkPresentModeKHR present_mode = VK_PRESENT_MODE_FIFO_KHR;
     if (!vsync) {
-        for (uint32_t i = 0; i < present_mode_count; ++i) {
+        for (u32 i = 0; i < present_mode_count; ++i) {
             if (present_modes[i] == VK_PRESENT_MODE_MAILBOX_KHR) {
                 present_mode = VK_PRESENT_MODE_MAILBOX_KHR;
                 break;
@@ -117,11 +116,11 @@ swapchain_update(Swapchain *sc, VkCommandPool cmd_pool, uint8_t vsync)
 
     // Cleanup old swapchain if there is one (not first creation)
     if (old_swapchain) {
-        for (uint32_t i = 0; i < sc->image_count; ++i) {
+        for (u32 i = 0; i < sc->image_count; ++i) {
             vkDestroyImageView(ldevice->handle, sc->image_views[i], g_allocator);
         }
 
-        for (uint32_t i = 0; i < sc->image_count + 1; ++i) {
+        for (u32 i = 0; i < sc->image_count + 1; ++i) {
             vkDestroySemaphore(ldevice->handle, sc->read_semaphores[i], g_allocator);
             vkDestroySemaphore(ldevice->handle, sc->write_semaphores[i], g_allocator);
         }
@@ -138,7 +137,7 @@ swapchain_update(Swapchain *sc, VkCommandPool cmd_pool, uint8_t vsync)
 
     VK_CHECK(vkGetSwapchainImagesKHR(ldevice->handle, sc->handle, &sc->image_count, sc->images));
 
-    for (uint32_t i = 0; i < sc->image_count; ++i) {
+    for (u32 i = 0; i < sc->image_count; ++i) {
         // image view
         VkImageViewCreateInfo create_info = {VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO};
         create_info.image                 = sc->images[i];
@@ -174,7 +173,7 @@ swapchain_update(Swapchain *sc, VkCommandPool cmd_pool, uint8_t vsync)
     sc->read_semaphores  = realloc(sc->read_semaphores, sc->semaphore_count * sizeof(VkSemaphore));
     sc->write_semaphores = realloc(sc->write_semaphores, sc->semaphore_count * sizeof(VkSemaphore));
 
-    for (uint32_t i = 0; i < sc->semaphore_count; ++i) {
+    for (u32 i = 0; i < sc->semaphore_count; ++i) {
         VkSemaphoreCreateInfo create_info = {VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO};
 
         VK_CHECK(vkCreateSemaphore(ldevice->handle, &create_info, g_allocator, &sc->read_semaphores[i]));
@@ -194,7 +193,7 @@ swapchain_destroy(Swapchain *sc)
 {
     Device *ldevice = sc->ldevice;
 
-    for (uint32_t i = 0; i < sc->image_count; ++i) {
+    for (u32 i = 0; i < sc->image_count; ++i) {
         vkDestroyImageView(ldevice->handle, sc->image_views[i], g_allocator);
         vkDestroyFence(ldevice->handle, sc->fences[i], g_allocator);
     }
@@ -203,7 +202,7 @@ swapchain_destroy(Swapchain *sc)
     free(sc->fences);
     free(sc->barriers);
 
-    for (uint32_t i = 0; i < sc->image_count + 1; ++i) {
+    for (u32 i = 0; i < sc->image_count + 1; ++i) {
         vkDestroySemaphore(ldevice->handle, sc->read_semaphores[i], g_allocator);
         vkDestroySemaphore(ldevice->handle, sc->write_semaphores[i], g_allocator);
     }
@@ -213,7 +212,7 @@ swapchain_destroy(Swapchain *sc)
     vkDestroySwapchainKHR(ldevice->handle, sc->handle, g_allocator);
 }
 
-uint32_t
+u32
 swapchain_acquire(Swapchain *sc)
 {
     // @Todo check for resize and destroy and recreate swapchain
@@ -238,7 +237,7 @@ void
 swapchain_present(Swapchain *sc, CommandBuffers *cmd_bufs)
 {
     Device *ldevice       = sc->ldevice;
-    uint32_t      current_image = sc->current_image;
+    u32      current_image = sc->current_image;
 
     // @Todo move this
     vkResetFences(ldevice->handle, 1, &sc->fences[current_image]);

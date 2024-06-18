@@ -2,23 +2,23 @@
 
 #include <GLFW/glfw3.h>
 
-#ifndef __cplusplus
+#include "base/base.h"
+
+C_LINKAGE_BEGIN
+
 typedef struct Input    Input;
 typedef struct MousePos MousePos;
-#else
-extern "C" {
-#endif
 
 struct MousePos {
-    float x;
-    float y;
+    f32 x;
+    f32 y;
 };
 
 struct Input {
     GLFWwindow *window;
     MousePos    mouse_pos;
     MousePos    mouse_delta_pos;
-    uint8_t     locked;
+    b8          locked;
 };
 
 void input_init(Input *input, GLFWwindow *window);
@@ -26,9 +26,7 @@ void input_update(Input *input);
 
 float input_get_scroll(Input *input);
 
-uint8_t input_is_key_down(Input *input, uint16_t key);
-uint8_t input_is_button_down(Input *input, uint8_t button);
+b8 input_is_key_down(Input *input, u16 key);
+b8 input_is_button_down(Input *input, u8 button);
 
-#ifdef __cplusplus
-}
-#endif
+C_LINKAGE_END

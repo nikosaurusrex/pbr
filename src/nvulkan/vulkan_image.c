@@ -4,7 +4,7 @@
 static VkAllocationCallbacks *g_allocator = 0;
 
 Image
-image_create(VkPhysicalDevice pdevice, Device *ldevice, VkFormat format, uint32_t width, uint32_t height, uint32_t mip_levels,
+image_create(VkPhysicalDevice pdevice, Device *ldevice, VkFormat format, u32 width, u32 height, u32 mip_levels,
              VkImageAspectFlags aspect_mask, VkImageUsageFlags usage)
 {
     // Create image handle
@@ -65,7 +65,7 @@ image_destroy(Device *ldevice, Image *image)
 }
 
 Texture
-texture_create(VkPhysicalDevice pdevice, Device *ldevice, VkFormat format, uint32_t width, uint32_t height, VkImageAspectFlags aspect_mask,
+texture_create(VkPhysicalDevice pdevice, Device *ldevice, VkFormat format, u32 width, u32 height, VkImageAspectFlags aspect_mask,
                VkImageUsageFlags usage)
 {
     Texture t = {0};

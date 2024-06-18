@@ -1,32 +1,28 @@
 #pragma once
 
-#include <stdint.h>
-
 #include <GLFW/glfw3.h>
+
+#include "base/base.h"
 
 #include "hl/input.h"
 #include "math/math.h"
 
-#ifndef __cplusplus
+C_LINKAGE_BEGIN
+
 typedef struct Camera Camera;
-#else
-extern "C" {
-#endif
 
 struct Camera {
-    Mat4  projection;
-    Mat4  view;
-    Vec3  look_at;
-    float yaw;
-    float pitch;
-    float radius;
-    float sensitivity;
+    Mat4 projection;
+    Mat4 view;
+    Vec3 look_at;
+    f32  yaw;
+    f32  pitch;
+    f32  radius;
+    f32  sensitivity;
 };
 
 void camera_init(Camera *c, Vec3 look_at);
-void camera_resize(Camera *c, uint32_t width, uint32_t height);
-void camera_update(Camera *c, Input *input, float delta);
+void camera_resize(Camera *c, u32 width, u32 height);
+void camera_update(Camera *c, Input *input, f32 delta);
 
-#ifdef __cplusplus
-}
-#endif
+C_LINKAGE_END

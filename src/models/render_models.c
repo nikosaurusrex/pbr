@@ -6,8 +6,8 @@ scene_renderer_create(VkPhysicalDevice pdevice, Device *ldevice, Swapchain *sc, 
     SceneRenderer r = {0};
 
     VkFormat color_format = sc->format.format;
-    uint32_t width        = sc->width;
-    uint32_t height       = sc->height;
+    u32 width        = sc->width;
+    u32 height       = sc->height;
 
     // Create color and depth images
     r.color_image                        = texture_create(pdevice, ldevice, color_format, width, height, VK_IMAGE_ASPECT_COLOR_BIT,
@@ -41,7 +41,7 @@ scene_renderer_create(VkPhysicalDevice pdevice, Device *ldevice, Swapchain *sc, 
         {2, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_FRAGMENT_BIT, 0},
     };
 
-    r.desc_set = descriptor_set_create(ldevice, bindings, ARR_COUNT(bindings));
+    r.desc_set = descriptor_set_create(ldevice, bindings, ArrayCount(bindings));
 
     // Setup graphics pipeline
     Shader shaders[] = {
@@ -57,8 +57,8 @@ scene_renderer_create(VkPhysicalDevice pdevice, Device *ldevice, Swapchain *sc, 
         {2, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, normal)},
     };
 
-    r.pipeline = pipeline_create(ldevice, &r.desc_set, r.render_pass, shaders, ARR_COUNT(shaders), vertex_bindings,
-                                 ARR_COUNT(vertex_bindings), vertex_attributes, ARR_COUNT(vertex_attributes), VK_CULL_MODE_FRONT_BIT);
+    r.pipeline = pipeline_create(ldevice, &r.desc_set, r.render_pass, shaders, ArrayCount(shaders), vertex_bindings,
+                                 ArrayCount(vertex_bindings), vertex_attributes, ArrayCount(vertex_attributes), VK_CULL_MODE_FRONT_BIT);
 
     float null_uniforms[sizeof(GlobalUniforms)] = {0};
     r.uniforms = buffer_create(pdevice, ldevice, cmd_pool, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
@@ -91,7 +91,7 @@ scene_renderer_destroy(Device *ldevice, SceneRenderer *r)
 }
 
 void
-scene_renderer_render(Swapchain *sc, VkCommandBuffer cmd_buf, SceneRenderer *r, Model *models, uint32_t model_count,
+scene_renderer_render(Swapchain *sc, VkCommandBuffer cmd_buf, SceneRenderer *r, Model *models, u32 model_count,
                       VkClearValue *clear_colors)
 {
     VkRenderPassBeginInfo begin_info = {VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO};

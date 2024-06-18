@@ -45,6 +45,8 @@ project "pbr"
 		"src/math/**.c",
 		"src/hl/**.h",
 		"src/hl/**.c",
+		"src/base/**.h",
+		"src/base/**.c",
 	}
 
   includedirs
@@ -77,6 +79,7 @@ project "pbr"
 	filter "configurations:Debug"
 		runtime "Debug"
 		symbols "on"
+		defines { "BUILD_DEBUG" }
 
 	filter "configurations:Release"
 		runtime "Release"

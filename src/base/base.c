@@ -1,12 +1,10 @@
-#pragma once
+#include "base.h"
 
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-#define ARR_COUNT(x) ((sizeof(x) / sizeof(*x)))
-
-static inline void
+void
 log_fatal(const char *fmt, ...)
 {
     va_list args;
@@ -21,7 +19,7 @@ log_fatal(const char *fmt, ...)
     exit(1);
 }
 
-static inline void
+void
 log_dev(const char *fmt, ...)
 {
     va_list args;

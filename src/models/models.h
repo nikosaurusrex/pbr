@@ -1,12 +1,13 @@
 #pragma once
 
-#include <stdalign.h>
+#include "base/base.h"
 
 #include "nvulkan/nvulkan.h"
 
 #include "math/math.h"
 
-#ifndef __cplusplus
+C_LINKAGE_BEGIN
+
 typedef struct GlobalUniforms  GlobalUniforms;
 typedef struct Vertex          Vertex;
 typedef struct Material        Material;
@@ -14,9 +15,6 @@ typedef struct Materials       Materials;
 typedef struct ModelDescriptor ModelDescriptor;
 typedef struct Model           Model;
 typedef struct SceneRenderer   SceneRenderer;
-#else
-extern "C" {
-#endif
 
 struct GlobalUniforms {
     Mat4 proj_matrix;
@@ -30,34 +28,34 @@ struct Vertex {
 };
 
 struct Material {
-    Vec4  ambient;
-    Vec4  diffuse;
-    Vec4  specular;
-    Vec4  transmittance;
-    Vec4  emission;
-    float shininess;
-    float ior;
-    float dissolve;
-    int   illum;
+    Vec4 ambient;
+    Vec4 diffuse;
+    Vec4 specular;
+    Vec4 transmittance;
+    Vec4 emission;
+    f32  shininess;
+    f32  ior;
+    f32  dissolve;
+    s32  illum;
 };
 
 struct Materials {
     Material    *materials;
     const char **names;
-    uint32_t     count;
-    uint32_t     capacity;
+    u32          count;
+    u32          capacity;
     Buffer       buffer;
 };
 
 struct ModelDescriptor {
-    uint64_t material_index_buffer_address;
+    u64 material_index_buffer_address;
 };
 
 struct Model {
-    Buffer   vertex_buffer;
-    Buffer   index_buffer;
-    Buffer   material_index_buffer;
-    uint32_t index_count;
+    Buffer vertex_buffer;
+    Buffer index_buffer;
+    Buffer material_index_buffer;
+    u32    index_count;
 };
 
 struct SceneRenderer {
@@ -70,13 +68,13 @@ struct SceneRenderer {
     Buffer        uniforms;
 };
 
-void     materials_init(Materials *materials);
-uint32_t materials_add(Materials *materials, const char *name, Material mat);
-uint8_t  materials_has(Materials *materials, const char *name);
-uint32_t materials_get_index(Materials *materials, const char *name);
-void     materials_free(Device *ldevice, Materials *materials);
-void     materials_write_descriptors(VkPhysicalDevice pdevice, Device *ldevice, VkCommandPool cmd_pool, DescriptorSet *desc_set,
-                                     Materials *materials);
+void materials_init(Materials *materials);
+u32  materials_add(Materials *materials, const char *name, Material mat);
+u8   materials_has(Materials *materials, const char *name);
+u32  materials_get_index(Materials *materials, const char *name);
+void materials_free(Device *ldevice, Materials *materials);
+void materials_write_descriptors(VkPhysicalDevice pdevice, Device *ldevice, VkCommandPool cmd_pool, DescriptorSet *desc_set,
+                                 Materials *materials);
 
 ModelDescriptor model_load(VkPhysicalDevice pdevice, Device *ldevice, VkCommandPool cmd_pool, Model *m, Materials *materials,
                            const char *path);
@@ -88,10 +86,8 @@ void models_write_descriptors(VkPhysicalDevice pdevice, Device *ldevice, VkComma
 SceneRenderer scene_renderer_create(VkPhysicalDevice pdevice, Device *ldevice, Swapchain *sc, VkCommandPool cmd_pool,
                                     VkFormat depth_format);
 void          scene_renderer_destroy(Device *ldevice, SceneRenderer *r);
-void          scene_renderer_render(Swapchain *sc, VkCommandBuffer cmd_buf, SceneRenderer *r, Model *models, uint32_t model_count,
+void          scene_renderer_render(Swapchain *sc, VkCommandBuffer cmd_buf, SceneRenderer *r, Model *models, u32 model_count,
                                     VkClearValue *clear_colors);
 void          scene_renderer_update_uniforms(SceneRenderer *r, VkCommandBuffer cmd_buf, GlobalUniforms *uniforms);
 
-#ifdef __cplusplus
-}
-#endif
+C_LINKAGE_END

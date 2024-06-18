@@ -1,12 +1,11 @@
-#include <assert.h>
-#include <stdarg.h>
-#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 #include "imgui.h"
 
 #include <GLFW/glfw3.h>
+
+#include "base/base.h"
 
 #include "gui/vulkan_imgui.h"
 #include "models/models.h"
@@ -17,7 +16,7 @@
 
 // Keep this here so we know later where we have to use it
 static VkAllocationCallbacks *g_allocator = 0;
-static bool                   g_show_gui  = false;
+static b8                     g_show_gui  = false;
 
 static void
 check_vk_result(VkResult err)
@@ -53,7 +52,7 @@ postprocess_create(Device *ldevice, VkRenderPass render_pass, Texture *target_te
         {"assets/shaders/post.spv", VK_SHADER_STAGE_FRAGMENT_BIT},
     };
 
-    p.pipeline = pipeline_create(ldevice, &p.desc_set, render_pass, shaders, ARR_COUNT(shaders), 0, 0, 0, 0, VK_CULL_MODE_NONE);
+    p.pipeline = pipeline_create(ldevice, &p.desc_set, render_pass, shaders, ArrayCount(shaders), 0, 0, 0, 0, VK_CULL_MODE_NONE);
 
     VkWriteDescriptorSet desc_write = {VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET};
     desc_write.dstSet               = p.desc_set.handle;
@@ -87,7 +86,7 @@ struct WindowPointerInfo {
 };
 
 void
-resize_callback(GLFWwindow *window, int width, int height)
+resize_callback(GLFWwindow *window, s32 width, s32 height)
 {
     WindowPointerInfo *info = (WindowPointerInfo *)glfwGetWindowUserPointer(window);
 
@@ -128,7 +127,7 @@ resize_callback(GLFWwindow *window, int width, int height)
 }
 
 void
-key_callback(GLFWwindow *window, int key, int scancode, int action, int mods)
+key_callback(GLFWwindow *window, s32 key, s32 scancode, s32 action, s32 mods)
 {
     WindowPointerInfo *info = (WindowPointerInfo *)glfwGetWindowUserPointer(window);
 
@@ -139,8 +138,8 @@ key_callback(GLFWwindow *window, int key, int scancode, int action, int mods)
     }
 }
 
-int
-main(int argc, char *argv[])
+s32
+main(s32 argc, char *argv[])
 {
     glfwSetErrorCallback(glfw_error_callback);
     if (!glfwInit()) {
@@ -154,28 +153,28 @@ main(int argc, char *argv[])
         log_fatal("Failed to create window!");
     }
 
-    bool raw_mouse_input = glfwRawMouseMotionSupported();
+    b8 raw_mouse_input = glfwRawMouseMotionSupported();
     if (raw_mouse_input) {
         glfwSetInputMode(window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
     }
 
-    uint32_t     req_extension_count;
+    u32          req_extension_count;
     const char **req_extensions = glfwGetRequiredInstanceExtensions(&req_extension_count);
 
     const char *layers[] = {"VK_LAYER_KHRONOS_validation"};
 
     VkInstance instance =
-        vulkan_instance_create("Raytracer", VK_API_VERSION_1_2, req_extensions, req_extension_count, layers, ARR_COUNT(layers));
+        vulkan_instance_create("Raytracer", VK_API_VERSION_1_2, req_extensions, req_extension_count, layers, ArrayCount(layers));
 
     VkSurfaceKHR surface = surface_create(instance, window);
 
     const char      *device_extensions[] = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
-    VkPhysicalDevice pdevice             = physical_device_find_compatible(instance, device_extensions, ARR_COUNT(device_extensions));
+    VkPhysicalDevice pdevice             = physical_device_find_compatible(instance, device_extensions, ArrayCount(device_extensions));
     if (!pdevice) {
         log_fatal("Failed to find compatible GPU device!");
     }
 
-    Device ldevice = logical_device_create(surface, pdevice, device_extensions, ARR_COUNT(device_extensions), layers, ARR_COUNT(layers));
+    Device ldevice = logical_device_create(surface, pdevice, device_extensions, ArrayCount(device_extensions), layers, ArrayCount(layers));
 
     VkCommandPool cmd_pool = command_pool_create(&ldevice);
 
@@ -195,7 +194,7 @@ main(int argc, char *argv[])
     materials_init(&materials);
 
     Model           model      = {};
-    ModelDescriptor model_desc = model_load(pdevice, &ldevice, cmd_pool, &model, &materials, "assets/models/sphere.obj");
+    ModelDescriptor model_desc = model_load(pdevice, &ldevice, cmd_pool, &model, &materials, "assets/models/Prop_Well_1.obj");
 
     // after loading models when we know which materials are used
     materials_write_descriptors(pdevice, &ldevice, cmd_pool, &scene_renderer.desc_set, &materials);
@@ -224,15 +223,15 @@ main(int argc, char *argv[])
     glfwSetFramebufferSizeCallback(window, resize_callback);
     glfwSetKeyCallback(window, key_callback);
 
-    float last_frame_time = glfwGetTime();
+    f32 last_frame_time = glfwGetTime();
 
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
 
         // calculate delta
-        float current_frame_time = glfwGetTime();
-        float delta_frame_time   = current_frame_time - last_frame_time;
-        last_frame_time          = current_frame_time;
+        f32 current_frame_time = glfwGetTime();
+        f32 delta_frame_time   = current_frame_time - last_frame_time;
+        last_frame_time        = current_frame_time;
 
         // update input and camera
         input_update(&input);
@@ -246,7 +245,7 @@ main(int argc, char *argv[])
         }
 
         // acquiring image from swapchain and command buffer for frame
-        uint32_t        current_image = swapchain_acquire(&swapchain);
+        u32        current_image = swapchain_acquire(&swapchain);
         VkCommandBuffer cmd_buf       = cmd_bufs.handles[current_image];
         command_buffer_begin(cmd_buf);
 

@@ -1,10 +1,15 @@
 #pragma once
 
-#include "common.h"
+#include <stdio.h>
+#include <stdlib.h>
 
 #include <vulkan/vulkan.h>
 
 #include <GLFW/glfw3.h>
+
+#include "base/base.h"
+
+C_LINKAGE_BEGIN
 
 #define VK_CHECK(call)                                                                                                                     \
     if (call != VK_SUCCESS) {                                                                                                              \
@@ -12,7 +17,6 @@
         exit(1);                                                                                                                           \
     }
 
-#ifndef __cplusplus
 typedef struct Device         Device;
 typedef struct Swapchain      Swapchain;
 typedef struct Image          Image;
@@ -23,9 +27,6 @@ typedef struct DescriptorSet  DescriptorSet;
 typedef struct Shader         Shader;
 typedef struct Pipeline       Pipeline;
 typedef struct Buffer         Buffer;
-#else
-extern "C" {
-#endif
 
 struct Device {
     VkDevice handle;
@@ -40,8 +41,8 @@ struct Swapchain {
     VkPhysicalDevice   pdevice;
     VkSurfaceFormatKHR format;
 
-    uint32_t image_count;
-    uint32_t semaphore_count;
+    u32 image_count;
+    u32 semaphore_count;
 
     VkImage              *images;
     VkImageView          *image_views;
@@ -50,10 +51,10 @@ struct Swapchain {
     VkSemaphore          *write_semaphores;
     VkFence              *fences;
 
-    uint32_t width;
-    uint32_t height;
-    uint32_t current_semaphore;
-    uint32_t current_image;
+    u32 width;
+    u32 height;
+    u32 current_semaphore;
+    u32 current_image;
 };
 
 struct Image {
@@ -70,12 +71,12 @@ struct Texture {
 
 struct Framebuffers {
     VkFramebuffer *handles;
-    uint32_t       count;
+    u32            count;
 };
 
 struct CommandBuffers {
     VkCommandBuffer *handles;
-    uint32_t         count;
+    u32              count;
 };
 
 struct DescriptorSet {
@@ -93,11 +94,11 @@ struct Pipeline {
     VkPipeline                         handle;
     VkPipelineLayout                   layout;
     VkPipelineShaderStageCreateInfo   *shader_stages;
-    uint32_t                           shader_count;
+    u32                                shader_count;
     VkVertexInputBindingDescription   *binding_descriptions;
-    uint32_t                           binding_description_count;
+    u32                                binding_description_count;
     VkVertexInputAttributeDescription *attribute_descriptions;
-    uint32_t                           attribute_description_count;
+    u32                                attribute_description_count;
 };
 
 struct Buffer {
@@ -105,21 +106,21 @@ struct Buffer {
     VkDeviceMemory memory;
 };
 
-VkInstance vulkan_instance_create(const char *name, int version, const char **extensions, uint32_t extension_count, const char **layers,
-                                  uint32_t layer_count);
+VkInstance vulkan_instance_create(const char *name, int version, const char **extensions, u32 extension_count, const char **layers,
+                                  u32 layer_count);
 void       vulkan_instance_destroy(VkInstance instance);
 
 VkSurfaceKHR surface_create(VkInstance instance, GLFWwindow *glfw_window);
 void         surface_destroy(VkInstance instance, VkSurfaceKHR surface);
 
-VkPhysicalDevice physical_device_find_compatible(VkInstance instance, const char **required_extensions, uint32_t required_extension_count);
+VkPhysicalDevice physical_device_find_compatible(VkInstance instance, const char **required_extensions, u32 required_extension_count);
 
-Device logical_device_create(VkSurfaceKHR surface, VkPhysicalDevice pdevice, const char **extensions, uint32_t extension_count,
-                             const char **layers, uint32_t layer_count);
+Device logical_device_create(VkSurfaceKHR surface, VkPhysicalDevice pdevice, const char **extensions, u32 extension_count,
+                             const char **layers, u32 layer_count);
 void   logical_device_destroy(Device *ldevice);
 
-Swapchain swapchain_create(VkSurfaceKHR surface, VkPhysicalDevice pdevice, Device *ldevice, VkCommandPool cmd_pool, uint32_t image_count);
-void      swapchain_update(Swapchain *sc, VkCommandPool cmd_pool, uint8_t vsync);
+Swapchain swapchain_create(VkSurfaceKHR surface, VkPhysicalDevice pdevice, Device *ldevice, VkCommandPool cmd_pool, u32 image_count);
+void      swapchain_update(Swapchain *sc, VkCommandPool cmd_pool, b8 vsync);
 void      swapchain_destroy(Swapchain *sc);
 uint32_t  swapchain_acquire(Swapchain *sc);
 void      swapchain_present(Swapchain *sc, CommandBuffers *cmd_bufs);
@@ -133,18 +134,18 @@ void            command_buffer_begin(VkCommandBuffer cmd_buf);
 void            command_buffer_end(VkCommandBuffer cmd_buf);
 void            command_buffer_submit(Device *ldevice, VkCommandBuffer cmd_buf);
 
-CommandBuffers command_buffers_allocate(Device *ldevice, VkCommandPool cmd_pool, uint32_t count);
+CommandBuffers command_buffers_allocate(Device *ldevice, VkCommandPool cmd_pool, u32 count);
 void           command_buffers_free(Device *ldevice, VkCommandPool cmd_pool, CommandBuffers *cmd_bufs);
 
-Image image_create(VkPhysicalDevice pdevice, Device *ldevice, VkFormat format, uint32_t width, uint32_t height, uint32_t mip_levels,
+Image image_create(VkPhysicalDevice pdevice, Device *ldevice, VkFormat format, u32 width, u32 height, u32 mip_levels,
                    VkImageAspectFlags aspect_mask, VkImageUsageFlags usage);
 void  image_destroy(Device *ldevice, Image *image);
 void  image_transition_layout(VkCommandBuffer cmd_buf, Image *image, VkImageLayout old_layout, VkImageLayout new_layout,
                               VkImageAspectFlags aspect_mask);
 Image image_create_depth(VkPhysicalDevice pdevice, Device *ldevice, Swapchain *sc, VkCommandPool cmd_pool);
 
-Texture texture_create(VkPhysicalDevice pdevice, Device *ldevice, VkFormat format, uint32_t width, uint32_t height,
-                       VkImageAspectFlags aspect_mask, VkImageUsageFlags usage);
+Texture texture_create(VkPhysicalDevice pdevice, Device *ldevice, VkFormat format, u32 width, u32 height, VkImageAspectFlags aspect_mask,
+                       VkImageUsageFlags usage);
 void    texture_destroy(Device *ldevice, Texture *t);
 
 VkRenderPass render_pass_create_present(Device *ldevice, VkFormat color_format, VkFormat depth_format);
@@ -157,13 +158,12 @@ void          frame_buffer_destroy(Device *ldevice, VkFramebuffer framebuffer);
 Framebuffers frame_buffers_create(Swapchain *sc, VkRenderPass render_pass, Image *depth_image);
 void         frame_buffers_destroy(Device *ldevice, Framebuffers *framebuffers);
 
-DescriptorSet descriptor_set_create(Device *ldevice, VkDescriptorSetLayoutBinding *bindings, uint32_t binding_count);
+DescriptorSet descriptor_set_create(Device *ldevice, VkDescriptorSetLayoutBinding *bindings, u32 binding_count);
 void          descriptor_set_destroy(Device *ldevice, DescriptorSet *descriptor_set);
 
-Pipeline pipeline_create(Device *ldevice, DescriptorSet *desc_set, VkRenderPass render_pass, Shader *shaders, uint32_t shader_count,
-                         VkVertexInputBindingDescription *binding_descriptions, uint32_t binding_description_count,
-                         VkVertexInputAttributeDescription *attribute_descriptions, uint32_t attribute_description_count,
-                         uint32_t cull_mode);
+Pipeline pipeline_create(Device *ldevice, DescriptorSet *desc_set, VkRenderPass render_pass, Shader *shaders, u32 shader_count,
+                         VkVertexInputBindingDescription *binding_descriptions, u32 binding_description_count,
+                         VkVertexInputAttributeDescription *attribute_descriptions, u32 attribute_description_count, u32 cull_mode);
 void     pipeline_destroy(Device *ldevice, Pipeline *pipeline);
 
 Buffer buffer_create(VkPhysicalDevice pdevice, Device *ldevice, VkCommandPool cmd_pool, VkBufferUsageFlags usage, void *data,
@@ -171,13 +171,13 @@ Buffer buffer_create(VkPhysicalDevice pdevice, Device *ldevice, VkCommandPool cm
 void   buffer_destroy(Device *ldevice, Buffer *buffer);
 
 // @Todo move somewhere
-static inline uint32_t
-memory_type_find(VkPhysicalDevice pdevice, uint32_t type_bits, VkMemoryPropertyFlags flags)
+static inline u32
+memory_type_find(VkPhysicalDevice pdevice, u32 type_bits, VkMemoryPropertyFlags flags)
 {
     VkPhysicalDeviceMemoryProperties memory_properties;
     vkGetPhysicalDeviceMemoryProperties(pdevice, &memory_properties);
 
-    for (uint32_t i = 0; i < memory_properties.memoryTypeCount; ++i) {
+    for (u32 i = 0; i < memory_properties.memoryTypeCount; ++i) {
         if ((type_bits & (1 << i)) && (memory_properties.memoryTypes[i].propertyFlags & flags) == flags) {
             return i;
         }
@@ -187,6 +187,4 @@ memory_type_find(VkPhysicalDevice pdevice, uint32_t type_bits, VkMemoryPropertyF
     return 0;
 }
 
-#ifdef __cplusplus
-}
-#endif
+C_LINKAGE_END

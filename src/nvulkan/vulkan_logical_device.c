@@ -4,13 +4,13 @@
 static VkAllocationCallbacks *g_allocator = 0;
 
 Device
-logical_device_create(VkSurfaceKHR surface, VkPhysicalDevice pdevice, const char **extensions, uint32_t extension_count,
-                      const char **layers, uint32_t layer_count)
+logical_device_create(VkSurfaceKHR surface, VkPhysicalDevice pdevice, const char **extensions, u32 extension_count, const char **layers,
+                      u32 layer_count)
 {
     VkPhysicalDeviceMemoryProperties memory_properties;
     vkGetPhysicalDeviceMemoryProperties(pdevice, &memory_properties);
 
-    uint32_t queue_family_count;
+    u32 queue_family_count;
     vkGetPhysicalDeviceQueueFamilyProperties(pdevice, &queue_family_count, 0);
 
     VkQueueFamilyProperties *queue_families = malloc(queue_family_count * sizeof(VkQueueFamilyProperties));
@@ -19,14 +19,14 @@ logical_device_create(VkSurfaceKHR surface, VkPhysicalDevice pdevice, const char
     // Setup device queues
     VkDeviceQueueCreateInfo queue_create_infos[1];
 
-    float queue_priority = 1.0f;
+    f32 queue_priority = 1.0f;
 
-    uint32_t graphics_index = ~0u;
-    for (uint32_t i = 0; i < queue_family_count; ++i) {
+    u32 graphics_index = ~0u;
+    for (u32 i = 0; i < queue_family_count; ++i) {
         VkQueueFamilyProperties queue_family = queue_families[i];
 
         if ((queue_family.queueFlags & VK_QUEUE_GRAPHICS_BIT)) {
-            int present_supported = VK_FALSE;
+            b32 present_supported = VK_FALSE;
             vkGetPhysicalDeviceSurfaceSupportKHR(pdevice, i, surface, &present_supported);
 
             if (!present_supported) {
@@ -45,14 +45,14 @@ logical_device_create(VkSurfaceKHR surface, VkPhysicalDevice pdevice, const char
         }
     }
     VkPhysicalDeviceVulkan12Features features_vulkan12 = {VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES};
-    features_vulkan12.bufferDeviceAddress = VK_TRUE;
+    features_vulkan12.bufferDeviceAddress              = VK_TRUE;
 
     VkPhysicalDeviceFeatures features_core = {0};
-    features_core.shaderInt64 = VK_TRUE;
-    features_core.geometryShader = VK_TRUE;
+    features_core.shaderInt64              = VK_TRUE;
+    features_core.geometryShader           = VK_TRUE;
 
     VkDeviceCreateInfo create_info      = {VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO};
-    create_info.queueCreateInfoCount    = ARR_COUNT(queue_create_infos);
+    create_info.queueCreateInfoCount    = ArrayCount(queue_create_infos);
     create_info.pQueueCreateInfos       = queue_create_infos;
     create_info.enabledExtensionCount   = extension_count;
     create_info.ppEnabledExtensionNames = extensions;

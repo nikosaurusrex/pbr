@@ -48,7 +48,7 @@ command_buffer_submit(Device *ldevice, VkCommandBuffer cmd_buf)
 }
 
 CommandBuffers
-command_buffers_allocate(Device *ldevice, VkCommandPool cmd_pool, uint32_t count)
+command_buffers_allocate(Device *ldevice, VkCommandPool cmd_pool, u32 count)
 {
     CommandBuffers cmd_bufs = {0};
     cmd_bufs.count                = count;

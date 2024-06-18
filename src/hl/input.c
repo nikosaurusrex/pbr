@@ -1,14 +1,14 @@
 #include "input.h"
 
 // @Todo: don't have this as a global
-static float g_acc_scroll = 0;
-static float g_last_scrol = 0;
-static float g_scroll     = 0;
+static f32 g_acc_scroll = 0;
+static f32 g_last_scrol = 0;
+static f32 g_scroll     = 0;
 
 static void
-scroll_callback(GLFWwindow *window, double xoffset, double yoffset)
+scroll_callback(GLFWwindow *window, f64 xoffset, f64 yoffset)
 {
-    g_acc_scroll += (float)yoffset;
+    g_acc_scroll += (f32)yoffset;
 }
 
 void
@@ -18,11 +18,11 @@ input_init(Input *input, GLFWwindow *window)
     input->mouse_delta_pos = (MousePos){0};
     input->locked          = 0;
 
-    double xpos, ypos;
+    f64 xpos, ypos;
     glfwGetCursorPos(window, &xpos, &ypos);
 
-    input->mouse_pos.x = (float)xpos;
-    input->mouse_pos.y = (float)ypos;
+    input->mouse_pos.x = (f32)xpos;
+    input->mouse_pos.y = (f32)ypos;
 
     glfwSetScrollCallback(window, scroll_callback);
 }
@@ -39,11 +39,11 @@ input_update(Input *input)
         return;
     }
 
-    double xpos, ypos;
+    f64 xpos, ypos;
     glfwGetCursorPos(input->window, &xpos, &ypos);
 
-    float xposf = (float)xpos;
-    float yposf = (float)ypos;
+    f32 xposf = (f32)xpos;
+    f32 yposf = (f32)ypos;
 
     input->mouse_delta_pos.x = xposf - input->mouse_pos.x;
     input->mouse_delta_pos.y = yposf - input->mouse_pos.y;
@@ -52,7 +52,7 @@ input_update(Input *input)
     input->mouse_pos.y = yposf;
 }
 
-float
+f32
 input_get_scroll(Input *input)
 {
     if (input->locked)
@@ -60,8 +60,8 @@ input_get_scroll(Input *input)
     return g_scroll;
 }
 
-uint8_t
-input_is_key_down(Input *input, uint16_t key)
+b8
+input_is_key_down(Input *input, u16 key)
 {
     if (input->locked)
         return 0;
@@ -69,8 +69,8 @@ input_is_key_down(Input *input, uint16_t key)
     return glfwGetKey(input->window, key) != GLFW_RELEASE;
 }
 
-uint8_t
-input_is_button_down(Input *input, uint8_t button)
+b8
+input_is_button_down(Input *input, u8 button)
 {
     if (input->locked)
         return 0;

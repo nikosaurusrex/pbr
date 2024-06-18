@@ -2,9 +2,9 @@
 
 void
 models_write_descriptors(VkPhysicalDevice pdevice, Device *ldevice, VkCommandPool cmd_pool, DescriptorSet *desc_set,
-                         ModelDescriptor *descriptors, uint32_t descriptor_count)
+                         ModelDescriptor *descriptors, u32 descriptor_count)
 {
-    uint32_t size = descriptor_count * sizeof(ModelDescriptor);
+    u32 size = descriptor_count * sizeof(ModelDescriptor);
 
     // @Todo: this buffer is never destroyed - do when we have a model manager
     Buffer buffer =
