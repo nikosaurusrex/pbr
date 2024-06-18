@@ -48,6 +48,7 @@ model_load(VkPhysicalDevice pdevice, Device *ldevice, VkCommandPool cmd_pool, Mo
         uint32_t index_of_added = materials_add(materials, obj_mat.name.c_str(), mat);
 
         mat_index_map[mat_index] = index_of_added;
+        mat_index++;
     }
 
     for (const auto &shape : reader.GetShapes()) {

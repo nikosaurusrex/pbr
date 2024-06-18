@@ -195,7 +195,7 @@ main(int argc, char *argv[])
     materials_init(&materials);
 
     Model           model      = {};
-    ModelDescriptor model_desc = model_load(pdevice, &ldevice, cmd_pool, &model, &materials, "assets/models/cube.obj");
+    ModelDescriptor model_desc = model_load(pdevice, &ldevice, cmd_pool, &model, &materials, "assets/models/sphere.obj");
 
     // after loading models when we know which materials are used
     materials_write_descriptors(pdevice, &ldevice, cmd_pool, &scene_renderer.desc_set, &materials);
