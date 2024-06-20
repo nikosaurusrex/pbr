@@ -38,6 +38,7 @@ struct Material {
     f32  ior;
     f32  dissolve;
     s32  illum;
+    s32  texture_offset;
 };
 
 struct Materials {
@@ -63,7 +64,6 @@ struct Model {
     Buffer index_buffer;
     Buffer material_index_buffer;
     u32    index_count;
-    u32    texture_offset;
 };
 
 struct SceneRenderer {
@@ -97,8 +97,8 @@ void            model_free(Device *ldevice, Model *m);
 void models_write_descriptors(VkPhysicalDevice pdevice, Device *ldevice, VkCommandPool cmd_pool, DescriptorSet *desc_set,
                               ModelDescriptor *descriptors, uint32_t descriptor_count);
 
-SceneRenderer scene_renderer_create(VkPhysicalDevice pdevice, Device *ldevice, Swapchain *sc, VkCommandPool cmd_pool,
-                                    VkFormat depth_format);
+SceneRenderer scene_renderer_create(VkPhysicalDevice pdevice, Device *ldevice, Swapchain *sc, VkCommandPool cmd_pool, VkFormat depth_format,
+                                    uint32_t diffuse_texture_count);
 void          scene_renderer_destroy(Device *ldevice, SceneRenderer *r);
 void          scene_renderer_render(Swapchain *sc, VkCommandBuffer cmd_buf, SceneRenderer *r, Model *models, u32 model_count,
                                     VkClearValue *clear_colors);

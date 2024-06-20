@@ -1,13 +1,13 @@
 #include "models.h"
 
 SceneRenderer
-scene_renderer_create(VkPhysicalDevice pdevice, Device *ldevice, Swapchain *sc, VkCommandPool cmd_pool, VkFormat depth_format)
+scene_renderer_create(VkPhysicalDevice pdevice, Device *ldevice, Swapchain *sc, VkCommandPool cmd_pool, VkFormat depth_format, uint32_t diffuse_texture_count)
 {
     SceneRenderer r = {0};
 
     VkFormat color_format = sc->format.format;
-    u32 width        = sc->width;
-    u32 height       = sc->height;
+    u32      width        = sc->width;
+    u32      height       = sc->height;
 
     // Create color and depth images
     r.color_image                        = texture_create(pdevice, ldevice, color_format, width, height, VK_IMAGE_ASPECT_COLOR_BIT,
@@ -39,6 +39,8 @@ scene_renderer_create(VkPhysicalDevice pdevice, Device *ldevice, Swapchain *sc, 
         {0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT, 0},
         {1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_FRAGMENT_BIT, 0},
         {2, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_FRAGMENT_BIT, 0},
+        {3, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, diffuse_texture_count,
+         VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR, 0},
     };
 
     r.desc_set = descriptor_set_create(ldevice, bindings, ArrayCount(bindings));
@@ -58,7 +60,7 @@ scene_renderer_create(VkPhysicalDevice pdevice, Device *ldevice, Swapchain *sc, 
     };
 
     r.pipeline = pipeline_create(ldevice, &r.desc_set, r.render_pass, shaders, ArrayCount(shaders), vertex_bindings,
-                                 ArrayCount(vertex_bindings), vertex_attributes, ArrayCount(vertex_attributes), VK_CULL_MODE_BACK_BIT);
+                                 ArrayCount(vertex_bindings), vertex_attributes, ArrayCount(vertex_attributes), VK_CULL_MODE_FRONT_BIT);
 
     float null_uniforms[sizeof(GlobalUniforms)] = {0};
     r.uniforms = buffer_create(pdevice, ldevice, cmd_pool, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
@@ -66,6 +68,7 @@ scene_renderer_create(VkPhysicalDevice pdevice, Device *ldevice, Swapchain *sc, 
 
     VkDescriptorBufferInfo buffer_desc = {r.uniforms.handle, 0, VK_WHOLE_SIZE};
 
+    // Write uniform buffer descriptor GlobalUniforms
     VkWriteDescriptorSet desc_write = {VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET};
     desc_write.dstSet               = r.desc_set.handle;
     desc_write.dstBinding           = 0;
@@ -91,8 +94,7 @@ scene_renderer_destroy(Device *ldevice, SceneRenderer *r)
 }
 
 void
-scene_renderer_render(Swapchain *sc, VkCommandBuffer cmd_buf, SceneRenderer *r, Model *models, u32 model_count,
-                      VkClearValue *clear_colors)
+scene_renderer_render(Swapchain *sc, VkCommandBuffer cmd_buf, SceneRenderer *r, Model *models, u32 model_count, VkClearValue *clear_colors)
 {
     VkRenderPassBeginInfo begin_info = {VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO};
     begin_info.clearValueCount       = 2;

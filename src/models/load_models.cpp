@@ -16,8 +16,6 @@ model_load(VkPhysicalDevice pdevice, Device *ldevice, VkCommandPool cmd_pool, Mo
     u32     material_index_count = 0;
     u32    *material_indices     = 0;
 
-    m->texture_offset = diffuse_textures->count;
-
     tinyobj::ObjReader reader;
     reader.ParseFromFile(path);
 
@@ -29,6 +27,10 @@ model_load(VkPhysicalDevice pdevice, Device *ldevice, VkCommandPool cmd_pool, Mo
 
     u32 mat_index = 0;
     for (const auto &obj_mat : reader.GetMaterials()) {
+        if (obj_mat.name != "default_sign7_sign_mult") {
+            continue;
+        }
+
         u32 existing_index = materials_get_index(materials, obj_mat.name.c_str());
         if (existing_index != UINT32_MAX) {
             mat_index_map[mat_index] = existing_index;
@@ -48,16 +50,21 @@ model_load(VkPhysicalDevice pdevice, Device *ldevice, VkCommandPool cmd_pool, Mo
         mat.dissolve      = obj_mat.dissolve;
         mat.illum         = obj_mat.illum;
 
-        u32 index_of_added = materials_add(materials, obj_mat.name.c_str(), mat);
-
-        mat_index_map[mat_index] = index_of_added;
-        mat_index++;
-
         if (!obj_mat.diffuse_texname.empty()) {
             std::string tex_path = "assets/models/" + obj_mat.diffuse_texname;
             log_dev("Loading texture: %s", tex_path.c_str());
             diffuse_textures_add_from_path(diffuse_textures, tex_path.c_str(), pdevice, ldevice, cmd_pool);
+
+            mat.texture_offset = diffuse_textures->count;
+        } else {
+            mat.texture_offset = -1;
         }
+
+        u32 index_of_added = materials_add(materials, obj_mat.name.c_str(), mat);
+
+        mat_index_map[mat_index] = index_of_added;
+
+        mat_index++;
     }
 
     for (const auto &shape : reader.GetShapes()) {

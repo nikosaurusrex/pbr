@@ -74,15 +74,16 @@ postprocess_destroy(Device *ldevice, Postprocess *p)
 }
 
 struct WindowPointerInfo {
-    Swapchain     *sc;
-    VkCommandPool  cmd_pool;
-    Image         *depth_buffer;
-    Framebuffers  *frame_buffers;
-    VkRenderPass   render_pass;
-    SceneRenderer *scene_renderer;
-    Postprocess   *postprocess;
-    Camera        *camera;
-    Input         *input;
+    Swapchain       *sc;
+    VkCommandPool    cmd_pool;
+    Image           *depth_buffer;
+    Framebuffers    *frame_buffers;
+    VkRenderPass     render_pass;
+    SceneRenderer   *scene_renderer;
+    Postprocess     *postprocess;
+    Camera          *camera;
+    Input           *input;
+    DiffuseTextures *diffuse_textures;
 };
 
 void
@@ -111,7 +112,8 @@ resize_callback(GLFWwindow *window, s32 width, s32 height)
     *info->frame_buffers = frame_buffers_create(sc, info->render_pass, info->depth_buffer);
 
     scene_renderer_destroy(ldevice, info->scene_renderer);
-    *info->scene_renderer = scene_renderer_create(pdevice, ldevice, sc, info->cmd_pool, info->depth_buffer->format);
+    *info->scene_renderer =
+        scene_renderer_create(pdevice, ldevice, sc, info->cmd_pool, info->depth_buffer->format, info->diffuse_textures->count);
 
     VkWriteDescriptorSet desc_write = {VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET};
     desc_write.dstSet               = info->postprocess->desc_set.handle;
@@ -185,23 +187,43 @@ main(s32 argc, char *argv[])
     Framebuffers   frame_buffers       = frame_buffers_create(&swapchain, present_render_pass, &depth_image);
     CommandBuffers cmd_bufs            = command_buffers_allocate(&ldevice, cmd_pool, swapchain.image_count);
 
-    SceneRenderer scene_renderer = scene_renderer_create(pdevice, &ldevice, &swapchain, cmd_pool, depth_image.format);
-    Postprocess   postprocess    = postprocess_create(&ldevice, present_render_pass, &scene_renderer.color_image);
-
-    VkDescriptorPool imgui_desc_pool = gui_init(window, instance, pdevice, &ldevice, swapchain.image_count, present_render_pass, cmd_pool);
+    DiffuseTextures diffuse_textures = {};
+    diffuse_textures_init(&diffuse_textures);
 
     Materials materials = {};
     materials_init(&materials);
-
-    DiffuseTextures diffuse_textures = {};
-    diffuse_textures_init(&diffuse_textures);
 
     Model           model = {};
     ModelDescriptor model_desc =
         model_load(pdevice, &ldevice, cmd_pool, &model, &materials, &diffuse_textures, "assets/models/Center City Sci-Fi.obj");
 
+    SceneRenderer scene_renderer = scene_renderer_create(pdevice, &ldevice, &swapchain, cmd_pool, depth_image.format, diffuse_textures.count);
+    Postprocess   postprocess    = postprocess_create(&ldevice, present_render_pass, &scene_renderer.color_image);
+
+    VkDescriptorPool imgui_desc_pool = gui_init(window, instance, pdevice, &ldevice, swapchain.image_count, present_render_pass, cmd_pool);
+
     // after loading models when we know which materials are used
     materials_write_descriptors(pdevice, &ldevice, cmd_pool, &scene_renderer.desc_set, &materials);
+
+    // write diffuse textures to descriptor set
+    if (diffuse_textures.count > 0) {
+        VkDescriptorImageInfo *image_infos = (VkDescriptorImageInfo *)malloc(diffuse_textures.count * sizeof(VkDescriptorImageInfo));
+        for (u32 i = 0; i < diffuse_textures.count; i++) {
+            image_infos[i] = diffuse_textures.textures[i].descriptor;
+        }
+            
+        // Write diffuse textures
+        VkWriteDescriptorSet desc_write = {VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET};
+        desc_write.dstSet               = scene_renderer.desc_set.handle;
+        desc_write.dstBinding           = 3;
+        desc_write.descriptorCount      = diffuse_textures.count;
+        desc_write.descriptorType       = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        desc_write.pImageInfo           = image_infos;
+
+        vkUpdateDescriptorSets(ldevice.handle, 1, &desc_write, 0, 0);
+
+        free(image_infos);
+    }
 
     models_write_descriptors(pdevice, &ldevice, cmd_pool, &scene_renderer.desc_set, &model_desc, 1);
 
@@ -222,6 +244,7 @@ main(s32 argc, char *argv[])
     wp_info.postprocess       = &postprocess;
     wp_info.camera            = &camera;
     wp_info.input             = &input;
+    wp_info.diffuse_textures  = &diffuse_textures;
 
     glfwSetWindowUserPointer(window, &wp_info);
     glfwSetFramebufferSizeCallback(window, resize_callback);
