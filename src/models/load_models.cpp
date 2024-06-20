@@ -6,7 +6,8 @@
 #include <tiny_obj_loader.h>
 
 ModelDescriptor
-model_load(VkPhysicalDevice pdevice, Device *ldevice, VkCommandPool cmd_pool, Model *m, Materials *materials, const char *path)
+model_load(VkPhysicalDevice pdevice, Device *ldevice, VkCommandPool cmd_pool, Model *m, Materials *materials,
+           DiffuseTextures *diffuse_textures, const char *path)
 {
     u32     vertex_count         = 0;
     Vertex *vertices             = 0;
@@ -14,6 +15,8 @@ model_load(VkPhysicalDevice pdevice, Device *ldevice, VkCommandPool cmd_pool, Mo
     u32    *indices              = 0;
     u32     material_index_count = 0;
     u32    *material_indices     = 0;
+
+    m->texture_offset = diffuse_textures->count;
 
     tinyobj::ObjReader reader;
     reader.ParseFromFile(path);
@@ -49,6 +52,12 @@ model_load(VkPhysicalDevice pdevice, Device *ldevice, VkCommandPool cmd_pool, Mo
 
         mat_index_map[mat_index] = index_of_added;
         mat_index++;
+
+        if (!obj_mat.diffuse_texname.empty()) {
+            std::string tex_path = "assets/models/" + obj_mat.diffuse_texname;
+            log_dev("Loading texture: %s", tex_path.c_str());
+            diffuse_textures_add_from_path(diffuse_textures, tex_path.c_str(), pdevice, ldevice, cmd_pool);
+        }
     }
 
     for (const auto &shape : reader.GetShapes()) {
@@ -105,6 +114,8 @@ model_load(VkPhysicalDevice pdevice, Device *ldevice, VkCommandPool cmd_pool, Mo
     address_info.buffer                    = m->material_index_buffer.handle;
 
     descriptor.material_index_buffer_address = vkGetBufferDeviceAddress(ldevice->handle, &address_info);
+
+    log_dev("Model loaded: %s with %u vertices and %u indices", path, vertex_count, index_count);
 
     return descriptor;
 }

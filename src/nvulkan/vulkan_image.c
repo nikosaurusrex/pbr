@@ -1,7 +1,15 @@
 #include "nvulkan.h"
 
+#include <math.h>
+
 // Keep this here so we know later where we have to use it
 static VkAllocationCallbacks *g_allocator = 0;
+
+static u32
+get_mip_levels(u32 width, u32 height)
+{
+    return (u32)(floorf(log2f((f32)Max(width, height)))) + 1;
+}
 
 Image
 image_create(VkPhysicalDevice pdevice, Device *ldevice, VkFormat format, u32 width, u32 height, u32 mip_levels,
@@ -77,6 +85,56 @@ texture_create(VkPhysicalDevice pdevice, Device *ldevice, VkFormat format, u32 w
 
     t.descriptor.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
     t.descriptor.imageView   = t.image.view;
+
+    return t;
+}
+Texture
+texture_from_pixels(VkPhysicalDevice pdevice, Device *ldevice, VkCommandPool cmd_pool, VkFormat format, u32 width, u32 height, u32 channels,
+                    u8 *pixels, VkSamplerCreateInfo sampler_info)
+{
+    Texture t = {0};
+
+    Image image = image_create(pdevice, ldevice, format, width, height, get_mip_levels(width, height), VK_IMAGE_ASPECT_COLOR_BIT,
+                               VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT);
+
+    // Copy pixels to image
+    VkDeviceSize size           = width * height * channels;
+    Buffer       staging_buffer = buffer_create_staging(pdevice, ldevice, size, pixels);
+
+    VkCommandBuffer cmd_buf = command_buffer_allocate(ldevice, cmd_pool);
+    command_buffer_begin(cmd_buf);
+
+    image_transition_layout(cmd_buf, &image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_ASPECT_COLOR_BIT);
+
+    VkBufferImageCopy region           = {0};
+    region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    region.imageSubresource.layerCount = 1;
+    region.imageExtent.width           = width;
+    region.imageExtent.height          = height;
+    region.imageExtent.depth           = 1;
+    region.bufferOffset                = 0;
+    region.bufferRowLength             = 0;
+    region.bufferImageHeight           = 0;
+    region.imageExtent.width           = width;
+    region.imageExtent.height          = height;
+    region.imageExtent.depth           = 1;
+    region.imageOffset                 = (VkOffset3D){0, 0, 0};
+
+    vkCmdCopyBufferToImage(cmd_buf, staging_buffer.handle, image.handle, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+
+    image_transition_layout(cmd_buf, &image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+                            VK_IMAGE_ASPECT_COLOR_BIT);
+
+    command_buffer_submit(ldevice, cmd_buf);
+    command_buffer_free(ldevice, cmd_pool, cmd_buf);
+
+    buffer_destroy(ldevice, &staging_buffer);
+
+    t.image                  = image;
+    t.descriptor.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    t.descriptor.imageView   = image.view;
+
+    vkCreateSampler(ldevice->handle, &sampler_info, g_allocator, &t.descriptor.sampler);
 
     return t;
 }

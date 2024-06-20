@@ -193,8 +193,12 @@ main(s32 argc, char *argv[])
     Materials materials = {};
     materials_init(&materials);
 
-    Model           model      = {};
-    ModelDescriptor model_desc = model_load(pdevice, &ldevice, cmd_pool, &model, &materials, "assets/models/Prop_Well_1.obj");
+    DiffuseTextures diffuse_textures = {};
+    diffuse_textures_init(&diffuse_textures);
+
+    Model           model = {};
+    ModelDescriptor model_desc =
+        model_load(pdevice, &ldevice, cmd_pool, &model, &materials, &diffuse_textures, "assets/models/Center City Sci-Fi.obj");
 
     // after loading models when we know which materials are used
     materials_write_descriptors(pdevice, &ldevice, cmd_pool, &scene_renderer.desc_set, &materials);
@@ -245,7 +249,7 @@ main(s32 argc, char *argv[])
         }
 
         // acquiring image from swapchain and command buffer for frame
-        u32        current_image = swapchain_acquire(&swapchain);
+        u32             current_image = swapchain_acquire(&swapchain);
         VkCommandBuffer cmd_buf       = cmd_bufs.handles[current_image];
         command_buffer_begin(cmd_buf);
 
@@ -295,6 +299,7 @@ main(s32 argc, char *argv[])
     vkDestroyDescriptorPool(ldevice.handle, imgui_desc_pool, 0);
 
     model_free(&ldevice, &model);
+    diffuse_textures_free(&ldevice, &diffuse_textures);
     materials_free(&ldevice, &materials);
     postprocess_destroy(&ldevice, &postprocess);
     scene_renderer_destroy(&ldevice, &scene_renderer);

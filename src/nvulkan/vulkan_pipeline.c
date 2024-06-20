@@ -24,6 +24,8 @@ pipeline_create(Device *ldevice, DescriptorSet *desc_set, VkRenderPass render_pa
             return p;
         }
 
+        log_dev("Loading shader: %s", shaders[i].path);
+
         fseek(f, 0, SEEK_END);
         size_t size = ftell(f);
         fseek(f, 0, SEEK_SET);

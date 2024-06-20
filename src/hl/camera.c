@@ -22,7 +22,7 @@ camera_resize(Camera *c, u32 width, u32 height)
 {
     f32 aspect = (f32)width / (f32)height;
 
-    c->projection = mat4_perspective(pi32 / 4.0f, aspect, 0.1f, 100.0f);
+    c->projection = mat4_perspective(pi32 / 4.0f, aspect, 0.1f, 10000.0f);
     c->projection.m11 *= -1;
 
     camera_update_view(c);
@@ -41,9 +41,9 @@ camera_update(Camera *c, Input *input, f32 delta)
 
     f32 scroll = input_get_scroll(input);
     if (scroll != 0.0f) {
-        c->radius -= scroll;
+        c->radius -= scroll * 10.0;
 
-        c->radius = Clamp(c->radius, 2.0f, 30.0f);
+        c->radius = Clamp(c->radius, 2.0f, 50.0f);
 
         moved = 1;
     }

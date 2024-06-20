@@ -34,6 +34,7 @@ project "pbr"
 	{
 		"src/**.h",
 		"src/**.cpp",
+		"src/**.c",
 		"src/nvulkan/**.h",
 		"src/nvulkan/**.c",
 		"src/gui/**.h",

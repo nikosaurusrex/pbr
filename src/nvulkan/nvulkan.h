@@ -146,6 +146,8 @@ Image image_create_depth(VkPhysicalDevice pdevice, Device *ldevice, Swapchain *s
 
 Texture texture_create(VkPhysicalDevice pdevice, Device *ldevice, VkFormat format, u32 width, u32 height, VkImageAspectFlags aspect_mask,
                        VkImageUsageFlags usage);
+Texture texture_from_pixels(VkPhysicalDevice pdevice, Device *ldevice, VkCommandPool cmd_pool, VkFormat format, u32 width, u32 height,
+                            u32 channels, u8 *pixels, VkSamplerCreateInfo sampler_info);
 void    texture_destroy(Device *ldevice, Texture *t);
 
 VkRenderPass render_pass_create_present(Device *ldevice, VkFormat color_format, VkFormat depth_format);
@@ -168,6 +170,7 @@ void     pipeline_destroy(Device *ldevice, Pipeline *pipeline);
 
 Buffer buffer_create(VkPhysicalDevice pdevice, Device *ldevice, VkCommandPool cmd_pool, VkBufferUsageFlags usage, void *data,
                      VkDeviceSize size);
+Buffer buffer_create_staging(VkPhysicalDevice pdevice, Device *ldevice, VkDeviceSize size, void *data);
 void   buffer_destroy(Device *ldevice, Buffer *buffer);
 
 // @Todo move somewhere

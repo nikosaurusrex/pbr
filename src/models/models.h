@@ -12,6 +12,7 @@ typedef struct GlobalUniforms  GlobalUniforms;
 typedef struct Vertex          Vertex;
 typedef struct Material        Material;
 typedef struct Materials       Materials;
+typedef struct DiffuseTextures DiffuseTextures;
 typedef struct ModelDescriptor ModelDescriptor;
 typedef struct Model           Model;
 typedef struct SceneRenderer   SceneRenderer;
@@ -47,6 +48,12 @@ struct Materials {
     Buffer       buffer;
 };
 
+struct DiffuseTextures {
+    Texture *textures;
+    u32      count;
+    u32      capacity;
+};
+
 struct ModelDescriptor {
     u64 material_index_buffer_address;
 };
@@ -56,6 +63,7 @@ struct Model {
     Buffer index_buffer;
     Buffer material_index_buffer;
     u32    index_count;
+    u32    texture_offset;
 };
 
 struct SceneRenderer {
@@ -76,8 +84,14 @@ void materials_free(Device *ldevice, Materials *materials);
 void materials_write_descriptors(VkPhysicalDevice pdevice, Device *ldevice, VkCommandPool cmd_pool, DescriptorSet *desc_set,
                                  Materials *materials);
 
+void diffuse_textures_init(DiffuseTextures *textures);
+void diffuse_textures_add(DiffuseTextures *textures, Texture texture);
+void diffuse_textures_add_from_path(DiffuseTextures *textures, const char *path, VkPhysicalDevice pdevice, Device *ldevice,
+                                    VkCommandPool cmd_pool);
+void diffuse_textures_free(Device *ldevice, DiffuseTextures *textures);
+
 ModelDescriptor model_load(VkPhysicalDevice pdevice, Device *ldevice, VkCommandPool cmd_pool, Model *m, Materials *materials,
-                           const char *path);
+                           DiffuseTextures *diffuse_textures, const char *path);
 void            model_free(Device *ldevice, Model *m);
 
 void models_write_descriptors(VkPhysicalDevice pdevice, Device *ldevice, VkCommandPool cmd_pool, DescriptorSet *desc_set,
