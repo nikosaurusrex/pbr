@@ -205,6 +205,7 @@ main(s32 argc, char *argv[])
     materials_write_descriptors(pdevice, &ldevice, cmd_pool, &pbr_renderer.desc_set, &materials);
 
     // write diffuse textures to descriptor set
+    /*
     if (diffuse_textures.count > 0) {
         VkDescriptorImageInfo *image_infos = (VkDescriptorImageInfo *)malloc(diffuse_textures.count * sizeof(VkDescriptorImageInfo));
         for (u32 i = 0; i < diffuse_textures.count; i++) {
@@ -222,7 +223,7 @@ main(s32 argc, char *argv[])
         vkUpdateDescriptorSets(ldevice.handle, 1, &desc_write, 0, 0);
 
         free(image_infos);
-    }
+    }*/
 
     models_write_descriptors(pdevice, &ldevice, cmd_pool, &pbr_renderer.desc_set, &model_desc, 1);
 
@@ -232,8 +233,6 @@ main(s32 argc, char *argv[])
     Camera camera;
     camera_init(&camera, vec3(0.0, 0.0, 0.0));
     camera_resize(&camera, swapchain.width, swapchain.height);
-
-    vec3_print(camera.position);
     
     WindowPointerInfo wp_info = {0};
     wp_info.cmd_pool          = cmd_pool;

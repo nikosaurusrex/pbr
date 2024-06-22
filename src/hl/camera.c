@@ -41,7 +41,7 @@ camera_update(Camera *c, Input *input, f32 delta)
 
     f32 scroll = input_get_scroll(input);
     if (scroll != 0.0f) {
-        c->radius -= scroll * 10.0;
+        c->radius -= scroll * 2.0;
 
         c->radius = Clamp(c->radius, 2.0f, 50.0f);
 

@@ -8,7 +8,7 @@ materials_init(Materials *materials)
     *materials = (Materials){.names = 0, .materials = 0, .count = 0, .capacity = 1, .buffer = {0}};
 
     materials_add(materials, "default",
-                  (Material){.albedo = vec4(0.5f, 0.0f, 1.0f, 1.0f), .metallic = 0.0f, .specular = 0.0f, .roughness = 0.0f});
+                  (Material){.albedo = vec4(0.123f, 0.0f, 0.754f, 1.0f), .metallic = 0.0f, .specular = 0.0f, .roughness = 0.0f});
 }
 
 u32
