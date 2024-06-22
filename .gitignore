@@ -7,3 +7,4 @@ out.png
 imgui.ini
 fun.py
 *.swp
+compile_flags.txt
