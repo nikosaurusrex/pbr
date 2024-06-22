@@ -14,6 +14,7 @@ typedef struct Camera Camera;
 struct Camera {
     Mat4 projection;
     Mat4 view;
+    Vec3 position;
     Vec3 look_at;
     f32  yaw;
     f32  pitch;

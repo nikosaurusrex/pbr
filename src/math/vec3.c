@@ -1,5 +1,6 @@
 #include "math.h"
 
+#include <stdio.h>
 #include <math.h>
 
 Vec3
@@ -42,4 +43,10 @@ f32
 vec3_dot(Vec3 v1, Vec3 v2)
 {
     return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
+}
+
+void
+vec3_print(Vec3 v)
+{
+    printf("(%f, %f, %f\n", v.x, v.y, v.z);
 }

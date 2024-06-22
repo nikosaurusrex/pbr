@@ -8,15 +8,7 @@ materials_init(Materials *materials)
     *materials = (Materials){.names = 0, .materials = 0, .count = 0, .capacity = 1, .buffer = {0}};
 
     materials_add(materials, "default",
-                  (Material){.ambient       = {0.1f, 0.1f, 0.1f, 1.0f},
-                             .diffuse       = {0.6f, 0.6f, 0.6f, 1.0f},
-                             .specular      = {0.3f, 0.3f, 0.3f, 1.0f},
-                             .transmittance = {0.0f, 0.0f, 0.0f, 1.0f},
-                             .emission      = {0.0f, 0.0f, 0.0f, 1.0f},
-                             .shininess     = 1.0f,
-                             .ior           = 1.0f,
-                             .dissolve      = 1.0f,
-                             .illum         = 2});
+                  (Material){.albedo = vec4(0.5f, 0.0f, 1.0f, 1.0f), .metallic = 0.0f, .specular = 0.0f, .roughness = 0.0f});
 }
 
 u32

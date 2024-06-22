@@ -57,6 +57,7 @@ f32  vec3_length(Vec3 v);
 Vec3 vec3_norm(Vec3 v);
 Vec3 vec3_cross(Vec3 v1, Vec3 v2);
 f32  vec3_dot(Vec3 v1, Vec3 v2);
+void vec3_print(Vec3 v);
 
 Vec4 vec4(f32 x, f32 y, f32 z, f32 w);
 

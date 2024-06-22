@@ -87,4 +87,5 @@ camera_update_view(Camera *c)
     f32 z = c->look_at.z + sinf(c->yaw) * h;
 
     c->view = mat4_lookat(vec3(x, y, z), c->look_at, vec3(0, 1, 0));
+    c->position = vec3(x, y, z);
 }

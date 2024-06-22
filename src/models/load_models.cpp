@@ -25,12 +25,10 @@ model_load(VkPhysicalDevice pdevice, Device *ldevice, VkCommandPool cmd_pool, Mo
     std::unordered_map<s32, u32> mat_index_map = {};
     mat_index_map.insert({-1, 0}); // means that if no material, then use default material
 
+    /* We don't load material anymore because we load wavefront object files and they don't store information for pbr materials like roughness,
+       so until we use some other loader and other format like assimp and glTF, we have to just load the vertex information and set the materials manually 
     u32 mat_index = 0;
     for (const auto &obj_mat : reader.GetMaterials()) {
-        if (obj_mat.name != "default_sign7_sign_mult") {
-            continue;
-        }
-
         u32 existing_index = materials_get_index(materials, obj_mat.name.c_str());
         if (existing_index != UINT32_MAX) {
             mat_index_map[mat_index] = existing_index;
@@ -55,9 +53,9 @@ model_load(VkPhysicalDevice pdevice, Device *ldevice, VkCommandPool cmd_pool, Mo
             log_dev("Loading texture: %s", tex_path.c_str());
             diffuse_textures_add_from_path(diffuse_textures, tex_path.c_str(), pdevice, ldevice, cmd_pool);
 
-            mat.texture_offset = diffuse_textures->count;
+            // mat.texture_offset = diffuse_textures->count;
         } else {
-            mat.texture_offset = -1;
+            // mat.texture_offset = -1;
         }
 
         u32 index_of_added = materials_add(materials, obj_mat.name.c_str(), mat);
@@ -65,6 +63,14 @@ model_load(VkPhysicalDevice pdevice, Device *ldevice, VkCommandPool cmd_pool, Mo
         mat_index_map[mat_index] = index_of_added;
 
         mat_index++;
+    }*/
+
+    // map every material to the default material for now
+    u32 mat_index = 0;
+    for (const auto &obj_mat : reader.GetMaterials()) {
+        mat_index_map[mat_index] = 0;
+
+        mat_index++; 
     }
 
     for (const auto &shape : reader.GetShapes()) {

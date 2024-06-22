@@ -46,6 +46,7 @@ logical_device_create(VkSurfaceKHR surface, VkPhysicalDevice pdevice, const char
     }
     VkPhysicalDeviceVulkan12Features features_vulkan12 = {VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES};
     features_vulkan12.bufferDeviceAddress              = VK_TRUE;
+    features_vulkan12.runtimeDescriptorArray           = VK_TRUE;
 
     VkPhysicalDeviceFeatures features_core = {0};
     features_core.shaderInt64              = VK_TRUE;

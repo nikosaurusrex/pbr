@@ -1,6 +1,9 @@
 #version 450
 
-layout(location = 0) in vec2 i_tex_coord;
+layout(location = 0) in vec3 i_frag_pos;
+layout(location = 1) in vec2 i_tex_coords;
+layout(location = 2) in vec3 i_normal;
+layout(location = 3) in vec3 i_view_pos;
 
 layout(location = 0) out vec4 o_color;
 
@@ -10,16 +13,10 @@ layout(location = 0) out vec4 o_color;
 #extension GL_EXT_nonuniform_qualifier : enable
 
 struct Material {
-    vec4  ambient;
-    vec4  diffuse;
-    vec4  specular;
-    vec4  transmittance;
-    vec4  emission;
-    float shininess;
-    float ior;
-    float dissolve;
-    int   illum;
-    int   texture_offset;
+    vec4 albedo;
+    float metallic;
+    float specular;
+    float roughness;
 };
 
 struct ModelDescription {
@@ -40,14 +37,6 @@ layout(buffer_reference, scalar) buffer MaterialIndices {int i[]; };
 
 #define PI 3.14159265359
 
-vec4 standard_shading(vec4 ambient, vec4 diffuse, vec4 specular, vec3 normal, vec3 view) {
-    float NoV = clamp(abs(dot(normal, view)) + 1e-5, 0.0, 1.0);
-
-    vec4 diffuse_lambert = diffuse * (1.0 / PI);
-
-    return vec4(diffuse_lambert.xyz, 1.0);
-}
-
 void main() {
     ModelDescription description     = modelDescriptionsBuffer.descriptions[0];
     MaterialIndices material_indices = MaterialIndices(description.material_indices_address);
@@ -55,12 +44,17 @@ void main() {
     int mat_index = material_indices.i[gl_PrimitiveID];
     Material m    = materialsBuffer.materials[mat_index];
 
-    vec4 diffuse = m.diffuse;
-    if (m.texture_offset > 0) {
-        vec4 tex = texture(textureSamplers[m.texture_offset], i_tex_coord);
+    vec3 light_pos = vec3(5.0, 5.0, 3.0);
+    vec3 light_color = vec3(1.0) * 20;
 
-        diffuse *= tex;
-    }
+    vec3 N = normalize(i_normal);
+    vec3 V = normalize(i_view_pos - i_frag_pos);
+    vec3 L = normalize(light_pos - i_frag_pos);
+    float cos_theta = dot(L, N);
 
-	o_color = standard_shading(m.ambient, diffuse, m.specular, vec3(0.0), vec3(0.0));
+    float distance = length(light_pos - i_frag_pos);
+    float attentuation = 1.0 / (distance * distance);
+    vec3 radiance = light_color * attentuation;
+
+	o_color = vec4(radiance, 1.0);
 }
