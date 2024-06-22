@@ -22,7 +22,7 @@ struct GlobalUniforms {
     Mat4 proj_matrix;
     Mat4 view_matrix;
     Vec3 view_pos;
-    f32 _pad1;
+    f32  _pad1;
 };
 
 struct Vertex {
@@ -110,6 +110,7 @@ u32  materials_get_index(Materials *materials, const char *name);
 void materials_free(Device *ldevice, Materials *materials);
 void materials_write_descriptors(VkPhysicalDevice pdevice, Device *ldevice, VkCommandPool cmd_pool, DescriptorSet *desc_set,
                                  Materials *materials);
+void materials_update_uniforms(Materials *materials, VkCommandBuffer cmd_buf);
 
 void diffuse_textures_init(DiffuseTextures *textures);
 void diffuse_textures_add(DiffuseTextures *textures, Texture texture);

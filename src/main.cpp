@@ -281,6 +281,10 @@ main(s32 argc, char *argv[])
         clear_colors[1].depthStencil = {1.0f, 0};
 
         // Scene
+        // @Todo only do on change
+        materials_update_uniforms(&materials, cmd_buf);
+
+        // @Todo only do on change (we can get that from update probably)
         GlobalUniforms uniforms = {camera.projection, camera.view, camera.position};
         pbr_renderer_update_uniforms(&pbr_renderer, cmd_buf, &uniforms);
         pbr_renderer_render(&swapchain, cmd_buf, &pbr_renderer, &model, 1, clear_colors);

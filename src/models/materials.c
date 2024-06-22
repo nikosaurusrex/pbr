@@ -88,3 +88,29 @@ materials_write_descriptors(VkPhysicalDevice pdevice, Device *ldevice, VkCommand
 
     vkUpdateDescriptorSets(ldevice->handle, 1, &desc_write, 0, 0);
 }
+
+void
+materials_update_uniforms(Materials *materials, VkCommandBuffer cmd_buf)
+{
+    VkDeviceSize size = materials->count * sizeof(Material);
+
+    VkBufferMemoryBarrier beforeBarrier = {VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER};
+    beforeBarrier.srcAccessMask         = VK_ACCESS_SHADER_READ_BIT;
+    beforeBarrier.dstAccessMask         = VK_ACCESS_TRANSFER_WRITE_BIT;
+    beforeBarrier.buffer                = materials->buffer.handle;
+    beforeBarrier.offset                = 0;
+    beforeBarrier.size                  = size;
+    vkCmdPipelineBarrier(cmd_buf, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_DEPENDENCY_DEVICE_GROUP_BIT, 0,
+                         0, 1, &beforeBarrier, 0, 0);
+
+    vkCmdUpdateBuffer(cmd_buf, materials->buffer.handle, 0, size, materials->materials);
+
+    VkBufferMemoryBarrier afterBarrier = {VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER};
+    afterBarrier.srcAccessMask         = VK_ACCESS_TRANSFER_WRITE_BIT;
+    afterBarrier.dstAccessMask         = VK_ACCESS_SHADER_READ_BIT;
+    afterBarrier.buffer                = materials->buffer.handle;
+    afterBarrier.offset                = 0;
+    afterBarrier.size                  = size;
+    vkCmdPipelineBarrier(cmd_buf, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, VK_DEPENDENCY_DEVICE_GROUP_BIT, 0,
+                         0, 1, &afterBarrier, 0, 0);
+};
