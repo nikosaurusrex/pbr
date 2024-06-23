@@ -6,7 +6,7 @@ pbr_renderer_create(VkPhysicalDevice pdevice, Device *ldevice, Swapchain *sc, Vk
 {
     PBRRenderer r = {0};
 
-    VkFormat color_format = sc->format.format;
+    VkFormat color_format = VK_FORMAT_R32G32B32A32_SFLOAT;
     u32      width        = sc->width;
     u32      height       = sc->height;
 
@@ -30,7 +30,7 @@ pbr_renderer_create(VkPhysicalDevice pdevice, Device *ldevice, Swapchain *sc, Vk
     command_buffer_free(ldevice, cmd_pool, cmd_buf);
 
     // Create render pass for offscreen rendering
-    r.render_pass = render_pass_create_offscreen(ldevice, r.color_image.image.format, r.depth_image.image.format);
+    r.render_pass = render_pass_create_offscreen(ldevice, color_format, r.depth_image.image.format);
 
     // Create framebuffer
     r.framebuffer = frame_buffer_create(sc, r.render_pass, r.color_image.image.view, r.depth_image.image.view);

@@ -88,3 +88,31 @@ gui_render(void)
 {
     ImGui::ShowDemoWindow();
 }
+
+void
+gui_render_materials(Materials *materials)
+{
+    // ImGui::ShowDemoWindow();
+
+    ImGui::Begin("Materials");
+
+    for (u32 i = 0; i < materials->count; ++i) {
+        ImGui::PushID(i);
+
+        char buf[20];
+        snprintf(buf, sizeof(buf), "Material %d\n", i);
+
+        ImGui::SeparatorText(buf);
+
+        Material *mat = &materials->materials[i];
+
+        ImGui::ColorEdit3("albedo", &mat->albedo.x);
+        ImGui::SliderFloat("metallic", &mat->metallic, 0.0f, 1.0f);
+        ImGui::SliderFloat("specular", &mat->specular, 0.0f, 1.0f);
+        ImGui::SliderFloat("roughness", &mat->roughness, 0.0f, 1.0f);
+
+        ImGui::PopID();
+    }
+
+    ImGui::End();
+}

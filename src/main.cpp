@@ -268,7 +268,7 @@ main(s32 argc, char *argv[])
         gui_new_frame();
 
         if (g_show_gui) {
-            gui_render();
+            gui_render_materials(&materials);
         }
 
         // acquiring image from swapchain and command buffer for frame
