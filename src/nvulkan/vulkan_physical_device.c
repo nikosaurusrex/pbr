@@ -1,5 +1,7 @@
 #include "nvulkan.h"
 
+#include <string.h>
+
 // Keep this here so we know later where we have to use it
 static VkAllocationCallbacks *g_allocator = 0;
 

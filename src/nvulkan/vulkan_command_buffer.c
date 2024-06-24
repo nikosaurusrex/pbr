@@ -15,7 +15,7 @@ command_buffer_allocate(Device *ldevice, VkCommandPool cmd_pool)
 }
 
 void
-command_buffer_free(Device *ldevice, VkCommandPool cmd_pool, VkCommandBuffer cmd_buf)
+command_buffer_free(VkCommandBuffer cmd_buf, Device *ldevice, VkCommandPool cmd_pool)
 {
     vkFreeCommandBuffers(ldevice->handle, cmd_pool, 1, &cmd_buf);
 }
@@ -35,7 +35,7 @@ command_buffer_end(VkCommandBuffer cmd_buf)
 }
 
 void
-command_buffer_submit(Device *ldevice, VkCommandBuffer cmd_buf)
+command_buffer_submit(VkCommandBuffer cmd_buf, Device *ldevice)
 {
     VK_CHECK(vkEndCommandBuffer(cmd_buf));
 
@@ -65,7 +65,7 @@ command_buffers_allocate(Device *ldevice, VkCommandPool cmd_pool, U32 count)
 }
 
 void
-command_buffers_free(Device *ldevice, VkCommandPool cmd_pool, CommandBuffers *cmd_bufs)
+command_buffers_free(CommandBuffers *cmd_bufs, Device *ldevice, VkCommandPool cmd_pool)
 {
     vkFreeCommandBuffers(ldevice->handle, cmd_pool, cmd_bufs->count, cmd_bufs->handles);
     free(cmd_bufs->handles);

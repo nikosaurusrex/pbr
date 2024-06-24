@@ -1,10 +1,12 @@
 #include "nvulkan.h"
 
+#include <string.h>
+
 // Keep this here so we know later where we have to use it
 static VkAllocationCallbacks *g_allocator = 0;
 
 static void
-buffer_create_internal(VkPhysicalDevice pdevice, Device *ldevice, VkDeviceSize size, VkBufferUsageFlags usage,
+buffer_create_internal(VkDeviceSize size, VkBufferUsageFlags usage, VkPhysicalDevice pdevice, Device *ldevice,
                        VkMemoryPropertyFlags properties, Buffer *buffer)
 {
     VkBufferCreateInfo info = {VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO};
@@ -34,7 +36,7 @@ buffer_create_internal(VkPhysicalDevice pdevice, Device *ldevice, VkDeviceSize s
 }
 
 static void
-buffer_copy_internal(Device *ldevice, VkCommandPool cmd_pool, VkBuffer src, VkBuffer dst, VkDeviceSize size)
+buffer_copy_internal(VkBuffer dst, VkBuffer src, VkDeviceSize size, Device *ldevice, VkCommandPool cmd_pool)
 {
     VkCommandBufferAllocateInfo info = {VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO};
     info.level                       = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
@@ -68,39 +70,38 @@ buffer_copy_internal(Device *ldevice, VkCommandPool cmd_pool, VkBuffer src, VkBu
 }
 
 Buffer
-buffer_create(VkPhysicalDevice pdevice, Device *ldevice, VkCommandPool cmd_pool, VkBufferUsageFlags usage, void *data, VkDeviceSize size)
+buffer_create(VkDeviceSize size, void *data, VkBufferUsageFlags usage, VkPhysicalDevice pdevice, Device *ldevice, VkCommandPool cmd_pool)
 {
     Buffer buffer         = {0};
-    Buffer staging_buffer = buffer_create_staging(pdevice, ldevice, size, data);
+    Buffer staging_buffer = buffer_create_staging(size, data, pdevice, ldevice);
 
-    buffer_create_internal(pdevice, ldevice, size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | usage, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-                           &buffer.handle, &buffer.memory);
+    buffer_create_internal(size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | usage, pdevice, ldevice, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &buffer);
 
-    buffer_copy_internal(ldevice, cmd_pool, staging_buffer.handle, buffer.handle, size);
+    buffer_copy_internal(buffer.handle, staging_buffer.handle, size, ldevice, cmd_pool);
 
-    buffer_destroy(ldevice, &staging_buffer);
+    buffer_destroy(&staging_buffer, ldevice);
 
     return buffer;
 }
 
 Buffer
-buffer_create_staging(VkPhysicalDevice pdevice, Device *ldevice, VkDeviceSize size, void *data)
+buffer_create_staging(VkDeviceSize size, void *data, VkPhysicalDevice pdevice, Device *ldevice)
 {
     Buffer buffer = {0};
 
-    buffer_create_internal(pdevice, ldevice, size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+    buffer_create_internal(size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, pdevice, ldevice,
                            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &buffer);
 
     void *mapped;
     vkMapMemory(ldevice->handle, buffer.memory, 0, size, 0, &mapped);
-    memcpy(mapped, data, size);
+    MemoryCopy(mapped, data, size);
     vkUnmapMemory(ldevice->handle, buffer.memory);
 
     return buffer;
 }
 
 void
-buffer_destroy(Device *ldevice, Buffer *buffer)
+buffer_destroy(Buffer *buffer, Device *ldevice)
 {
     vkDestroyBuffer(ldevice->handle, buffer->handle, g_allocator);
     vkFreeMemory(ldevice->handle, buffer->memory, g_allocator);

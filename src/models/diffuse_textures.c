@@ -42,16 +42,16 @@ diffuse_textures_add_from_path(DiffuseTextures *textures, const char *path, VkPh
         log_fatal("Failed to load texture: %s", path);
     }
 
-    Texture t = texture_from_pixels(pdevice, ldevice, cmd_pool, format, width, height, STBI_rgb_alpha, pixels, sampler_info);
+    Texture t = texture_from_pixels(width, height, STBI_rgb_alpha, format, pixels, sampler_info, pdevice, ldevice, cmd_pool);
 
     diffuse_textures_add(textures, t);
 }
 
 void
-diffuse_textures_free(Device *ldevice, DiffuseTextures *textures)
+diffuse_textures_free(DiffuseTextures *textures, Device *ldevice)
 {
     for (U32 i = 0; i < textures->count; ++i) {
-        texture_destroy(ldevice, &textures->textures[i]);
+        texture_destroy(&textures->textures[i], ldevice);
     }
 
     free(textures->textures);

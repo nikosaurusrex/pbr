@@ -12,7 +12,7 @@ surface_create(VkInstance instance, GLFWwindow *glfw_window)
 }
 
 void
-surface_destroy(VkInstance instance, VkSurfaceKHR surface)
+surface_destroy(VkSurfaceKHR surface, VkInstance instance)
 {
     vkDestroySurfaceKHR(instance, surface, g_allocator);
 }

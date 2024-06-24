@@ -125,7 +125,7 @@ pipeline_create(Device *ldevice, DescriptorSet *desc_set, VkRenderPass render_pa
 }
 
 void
-pipeline_destroy(Device *ldevice, Pipeline *pipeline)
+pipeline_destroy(Pipeline *pipeline, Device *ldevice)
 {
     for (U32 i = 0; i < pipeline->shader_count; ++i) {
         vkDestroyShaderModule(ldevice->handle, pipeline->shader_stages[i].module, g_allocator);

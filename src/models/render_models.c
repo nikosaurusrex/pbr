@@ -11,26 +11,27 @@ pbr_renderer_create(VkPhysicalDevice pdevice, Device *ldevice, Swapchain *sc, Vk
     U32      height       = sc->height;
 
     // Create color and depth images
-    r.color_image                        = texture_create(pdevice, ldevice, color_format, width, height, VK_IMAGE_ASPECT_COLOR_BIT,
-                                                          VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT);
+    r.color_image =
+        texture_create(width, height, color_format, VK_IMAGE_ASPECT_COLOR_BIT,
+                       VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT, pdevice, ldevice);
     r.color_image.descriptor.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
 
-    r.depth_image = texture_create(pdevice, ldevice, depth_format, width, height, VK_IMAGE_ASPECT_DEPTH_BIT,
-                                   VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT);
+    r.depth_image = texture_create(width, height, depth_format, VK_IMAGE_ASPECT_DEPTH_BIT, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+                                   pdevice, ldevice);
 
     // Transition image layouts
     VkCommandBuffer cmd_buf = command_buffer_allocate(ldevice, cmd_pool);
     command_buffer_begin(cmd_buf);
 
-    image_transition_layout(cmd_buf, &r.color_image.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_ASPECT_COLOR_BIT);
-    image_transition_layout(cmd_buf, &r.depth_image.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
-                            VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT);
+    image_transition_layout(&r.color_image.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_ASPECT_COLOR_BIT, cmd_buf);
+    image_transition_layout(&r.depth_image.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+                            VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT, cmd_buf);
 
-    command_buffer_submit(ldevice, cmd_buf);
-    command_buffer_free(ldevice, cmd_pool, cmd_buf);
+    command_buffer_submit(cmd_buf, ldevice);
+    command_buffer_free(cmd_buf, ldevice, cmd_pool);
 
     // Create render pass for offscreen rendering
-    r.render_pass = render_pass_create_offscreen(ldevice, color_format, r.depth_image.image.format);
+    r.render_pass = render_pass_create_offscreen(color_format, r.depth_image.image.format, ldevice);
 
     // Create framebuffer
     r.framebuffer = frame_buffer_create(sc, r.render_pass, r.color_image.image.view, r.depth_image.image.view);
@@ -44,7 +45,7 @@ pbr_renderer_create(VkPhysicalDevice pdevice, Device *ldevice, Swapchain *sc, Vk
          VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR, 0},
     };
 
-    r.desc_set = descriptor_set_create(ldevice, bindings, ArrayCount(bindings));
+    r.desc_set = descriptor_set_create(bindings, ArrayCount(bindings), ldevice);
 
     // Setup graphics pipeline
     Shader shaders[] = {
@@ -64,8 +65,8 @@ pbr_renderer_create(VkPhysicalDevice pdevice, Device *ldevice, Swapchain *sc, Vk
                                  ArrayCount(vertex_bindings), vertex_attributes, ArrayCount(vertex_attributes), VK_CULL_MODE_FRONT_BIT);
 
     float null_uniforms[sizeof(GlobalUniforms)] = {0};
-    r.uniforms = buffer_create(pdevice, ldevice, cmd_pool, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-                               null_uniforms, sizeof(GlobalUniforms));
+    r.uniforms = buffer_create(sizeof(GlobalUniforms), null_uniforms, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+                               pdevice, ldevice, cmd_pool);
 
     VkDescriptorBufferInfo buffer_desc = {r.uniforms.handle, 0, VK_WHOLE_SIZE};
 
@@ -83,19 +84,19 @@ pbr_renderer_create(VkPhysicalDevice pdevice, Device *ldevice, Swapchain *sc, Vk
 }
 
 void
-pbr_renderer_destroy(Device *ldevice, PBRRenderer *r)
+pbr_renderer_destroy(PBRRenderer *r, Device *ldevice)
 {
-    buffer_destroy(ldevice, &r->uniforms);
-    pipeline_destroy(ldevice, &r->pipeline);
-    descriptor_set_destroy(ldevice, &r->desc_set);
-    frame_buffer_destroy(ldevice, r->framebuffer);
-    render_pass_destroy(ldevice, r->render_pass);
-    texture_destroy(ldevice, &r->color_image);
-    texture_destroy(ldevice, &r->depth_image);
+    buffer_destroy(&r->uniforms, ldevice);
+    pipeline_destroy(&r->pipeline, ldevice);
+    descriptor_set_destroy(&r->desc_set, ldevice);
+    frame_buffer_destroy(r->framebuffer, ldevice);
+    render_pass_destroy(r->render_pass, ldevice);
+    texture_destroy(&r->color_image, ldevice);
+    texture_destroy(&r->depth_image, ldevice);
 }
 
 void
-pbr_renderer_render(Swapchain *sc, VkCommandBuffer cmd_buf, PBRRenderer *r, Model *models, U32 model_count, VkClearValue *clear_colors)
+pbr_renderer_render(PBRRenderer *r, Swapchain *sc, VkCommandBuffer cmd_buf, Model *models, U32 model_count, VkClearValue *clear_colors)
 {
     VkRenderPassBeginInfo begin_info = {VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO};
     begin_info.clearValueCount       = 2;
@@ -236,7 +237,7 @@ VK_IMAGE_USAGE_STORAGE_BIT); r.color_image.descriptor.imageLayout = VK_IMAGE_LAY
 }
 
 void
-scene_renderer_destroy(Device *ldevice, SceneRenderer *r)
+scene_renderer_destroy(SceneRenderer *r, Device *ldevice)
 {
     buffer_destroy(ldevice, &r->uniforms);
     pipeline_destroy(ldevice, &r->pipeline);
@@ -248,7 +249,7 @@ scene_renderer_destroy(Device *ldevice, SceneRenderer *r)
 }
 
 void
-scene_renderer_render(Swapchain *sc, VkCommandBuffer cmd_buf, SceneRenderer *r, Model *models, U32 model_count, VkClearValue *clear_colors)
+scene_renderer_render(SceneRenderer *r, Swapchain *sc, VkCommandBuffer cmd_buf, Model *models, U32 model_count, VkClearValue *clear_colors)
 {
     VkRenderPassBeginInfo begin_info = {VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO};
     begin_info.clearValueCount       = 2;

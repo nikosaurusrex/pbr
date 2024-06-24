@@ -8,7 +8,7 @@ models_write_descriptors(VkPhysicalDevice pdevice, Device *ldevice, VkCommandPoo
 
     // @Todo: this buffer is never destroyed - do when we have a model manager
     Buffer buffer =
-        buffer_create(pdevice, ldevice, cmd_pool, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, descriptors, size);
+        buffer_create(size, descriptors, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, pdevice, ldevice, cmd_pool);
 
     VkDescriptorBufferInfo buffer_desc = {buffer.handle, 0, VK_WHOLE_SIZE};
 
@@ -20,4 +20,12 @@ models_write_descriptors(VkPhysicalDevice pdevice, Device *ldevice, VkCommandPoo
     desc_write.pBufferInfo          = &buffer_desc;
 
     vkUpdateDescriptorSets(ldevice->handle, 1, &desc_write, 0, 0);
+}
+
+void
+model_free(Model *m, Device *ldevice)
+{
+    buffer_destroy(&m->vertex_buffer, ldevice);
+    buffer_destroy(&m->index_buffer, ldevice);
+    buffer_destroy(&m->material_index_buffer, ldevice);
 }

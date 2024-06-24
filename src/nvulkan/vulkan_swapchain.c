@@ -7,7 +7,7 @@
 static VkAllocationCallbacks *g_allocator = 0;
 
 Swapchain
-swapchain_create(VkSurfaceKHR surface, VkPhysicalDevice pdevice, Device *ldevice, VkCommandPool cmd_pool, U32 image_count)
+swapchain_create(U32 image_count, VkSurfaceKHR surface, VkPhysicalDevice pdevice, Device *ldevice, VkCommandPool cmd_pool)
 {
     Swapchain swapchain = {0};
 
@@ -184,8 +184,8 @@ swapchain_update(Swapchain *sc, VkCommandPool cmd_pool, B8 vsync)
     command_buffer_begin(cmd_buf);
     vkCmdPipelineBarrier(cmd_buf, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, 0, 0, 0, 0, 0,
                          sc->image_count, sc->barriers);
-    command_buffer_submit(ldevice, cmd_buf);
-    command_buffer_free(ldevice, cmd_pool, cmd_buf);
+    command_buffer_submit(cmd_buf, ldevice);
+    command_buffer_free(cmd_buf, ldevice, cmd_pool);
 }
 
 void

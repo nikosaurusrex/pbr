@@ -107,36 +107,36 @@ void materials_init(Materials *materials);
 U32  materials_add(Materials *materials, const char *name, Material mat);
 B8   materials_has(Materials *materials, const char *name);
 U32  materials_get_index(Materials *materials, const char *name);
-void materials_free(Device *ldevice, Materials *materials);
-void materials_write_descriptors(VkPhysicalDevice pdevice, Device *ldevice, VkCommandPool cmd_pool, DescriptorSet *desc_set,
-                                 Materials *materials);
+void materials_free(Materials *materials, Device *ldevice);
+void materials_write_descriptors(Materials *materials, VkPhysicalDevice pdevice, Device *ldevice, VkCommandPool cmd_pool,
+                                 DescriptorSet *desc_set);
 void materials_update_uniforms(Materials *materials, VkCommandBuffer cmd_buf);
 
 void diffuse_textures_init(DiffuseTextures *textures);
 void diffuse_textures_add(DiffuseTextures *textures, Texture texture);
 void diffuse_textures_add_from_path(DiffuseTextures *textures, const char *path, VkPhysicalDevice pdevice, Device *ldevice,
                                     VkCommandPool cmd_pool);
-void diffuse_textures_free(Device *ldevice, DiffuseTextures *textures);
+void diffuse_textures_free(DiffuseTextures *textures, Device *ldevice);
 
 ModelDescriptor model_load(VkPhysicalDevice pdevice, Device *ldevice, VkCommandPool cmd_pool, Model *m, Materials *materials,
                            DiffuseTextures *diffuse_textures, const char *path);
-void            model_free(Device *ldevice, Model *m);
 
 void models_write_descriptors(VkPhysicalDevice pdevice, Device *ldevice, VkCommandPool cmd_pool, DescriptorSet *desc_set,
                               ModelDescriptor *descriptors, uint32_t descriptor_count);
+void model_free(Model *m, Device *ldevice);
 
 PBRRenderer pbr_renderer_create(VkPhysicalDevice pdevice, Device *ldevice, Swapchain *sc, VkCommandPool cmd_pool, VkFormat depth_format,
                                 uint32_t diffuse_texture_count);
-void        pbr_renderer_destroy(Device *ldevice, PBRRenderer *r);
-void        pbr_renderer_render(Swapchain *sc, VkCommandBuffer cmd_buf, PBRRenderer *r, Model *models, U32 model_count,
+void        pbr_renderer_destroy(PBRRenderer *r, Device *ldevice);
+void        pbr_renderer_render(PBRRenderer *r, Swapchain *sc, VkCommandBuffer cmd_buf, Model *models, U32 model_count,
                                 VkClearValue *clear_colors);
 void        pbr_renderer_update_uniforms(PBRRenderer *r, VkCommandBuffer cmd_buf, GlobalUniforms *uniforms);
 
 /*
 SceneRenderer scene_renderer_create(VkPhysicalDevice pdevice, Device *ldevice, Swapchain *sc, VkCommandPool cmd_pool, VkFormat depth_format,
                                     uint32_t diffuse_texture_count);
-void          scene_renderer_destroy(Device *ldevice, SceneRenderer *r);
-void          scene_renderer_render(Swapchain *sc, VkCommandBuffer cmd_buf, SceneRenderer *r, Model *models, U32 model_count,
+void          scene_renderer_destroy(SceneRenderer *r, Device *ldevice, );
+void          scene_renderer_render(SceneRenderer *r, Swapchain *sc, VkCommandBuffer cmd_buf, Model *models, U32 model_count,
                                     VkClearValue *clear_colors);
 void          scene_renderer_update_uniforms(SceneRenderer *r, VkCommandBuffer cmd_buf, GlobalUniforms *uniforms);
 */

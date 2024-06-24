@@ -16,7 +16,7 @@ command_pool_create(Device *ldevice)
 }
 
 void
-command_pool_destroy(Device *ldevice, VkCommandPool cmd_pool)
+command_pool_destroy(VkCommandPool cmd_pool, Device *ldevice)
 {
     vkDestroyCommandPool(ldevice->handle, cmd_pool, g_allocator);
 }

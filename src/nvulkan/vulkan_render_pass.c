@@ -4,7 +4,7 @@
 static VkAllocationCallbacks *g_allocator = 0;
 
 VkRenderPass
-render_pass_create_present(Device *ldevice, VkFormat color_format, VkFormat depth_format)
+render_pass_create_present(VkFormat color_format, VkFormat depth_format, Device *ldevice)
 {
     VkAttachmentDescription attachments[2] = {0};
 
@@ -63,7 +63,7 @@ render_pass_create_present(Device *ldevice, VkFormat color_format, VkFormat dept
 }
 
 VkRenderPass
-render_pass_create_offscreen(Device *ldevice, VkFormat color_format, VkFormat depth_format)
+render_pass_create_offscreen(VkFormat color_format, VkFormat depth_format, Device *ldevice)
 {
     VkAttachmentDescription attachments[2] = {0};
 
@@ -124,7 +124,7 @@ render_pass_create_offscreen(Device *ldevice, VkFormat color_format, VkFormat de
 }
 
 void
-render_pass_destroy(Device *ldevice, VkRenderPass render_pass)
+render_pass_destroy(VkRenderPass render_pass, Device *ldevice)
 {
     vkDestroyRenderPass(ldevice->handle, render_pass, g_allocator);
 }

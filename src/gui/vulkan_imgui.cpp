@@ -53,8 +53,8 @@ gui_init(GLFWwindow *window, VkInstance instance, VkPhysicalDevice pdevice, Devi
 
     ImGui_ImplVulkan_CreateFontsTexture(command_buffer);
 
-    command_buffer_submit(ldevice, command_buffer);
-    command_buffer_free(ldevice, cmd_pool, command_buffer);
+    command_buffer_submit(command_buffer, ldevice);
+    command_buffer_free(command_buffer, ldevice, cmd_pool);
 
     ImGui_ImplVulkan_DestroyFontUploadObjects();
 

@@ -45,7 +45,7 @@ postprocess_create(Device *ldevice, VkRenderPass render_pass, Texture *target_te
     Postprocess p = {};
 
     VkDescriptorSetLayoutBinding binding = {0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT, 0};
-    p.desc_set                           = descriptor_set_create(ldevice, &binding, 1);
+    p.desc_set                           = descriptor_set_create(&binding, 1, ldevice);
 
     Shader shaders[] = {
         {"assets/shaders/pass.spv", VK_SHADER_STAGE_VERTEX_BIT},
@@ -67,10 +67,10 @@ postprocess_create(Device *ldevice, VkRenderPass render_pass, Texture *target_te
 }
 
 void
-postprocess_destroy(Device *ldevice, Postprocess *p)
+postprocess_destroy(Postprocess *p, Device *ldevice)
 {
-    pipeline_destroy(ldevice, &p->pipeline);
-    descriptor_set_destroy(ldevice, &p->desc_set);
+    pipeline_destroy(&p->pipeline, ldevice);
+    descriptor_set_destroy(&p->desc_set, ldevice);
 }
 
 struct WindowPointerInfo {
@@ -105,13 +105,13 @@ resize_callback(GLFWwindow *window, S32 width, S32 height)
     ImGui::GetIO().DisplaySize = ImVec2(width, height);
 
     // Recreate depth buffer, framebuffers, renderer and postprocess
-    image_destroy(ldevice, info->depth_buffer);
+    image_destroy(info->depth_buffer, ldevice);
     *info->depth_buffer = image_create_depth(pdevice, ldevice, sc, info->cmd_pool);
 
-    frame_buffers_destroy(ldevice, info->frame_buffers);
+    frame_buffers_destroy(info->frame_buffers, ldevice);
     *info->frame_buffers = frame_buffers_create(sc, info->render_pass, info->depth_buffer);
 
-    pbr_renderer_destroy(ldevice, info->pbr_renderer);
+    pbr_renderer_destroy(info->pbr_renderer, ldevice);
     *info->pbr_renderer =
         pbr_renderer_create(pdevice, ldevice, sc, info->cmd_pool, info->depth_buffer->format, info->diffuse_textures->count);
 
@@ -180,10 +180,10 @@ main(S32 argc, char *argv[])
 
     VkCommandPool cmd_pool = command_pool_create(&ldevice);
 
-    Swapchain swapchain = swapchain_create(surface, pdevice, &ldevice, cmd_pool, 2);
+    Swapchain swapchain = swapchain_create(2, surface, pdevice, &ldevice, cmd_pool);
 
     Image          depth_image         = image_create_depth(pdevice, &ldevice, &swapchain, cmd_pool);
-    VkRenderPass   present_render_pass = render_pass_create_present(&ldevice, swapchain.format.format, depth_image.format);
+    VkRenderPass   present_render_pass = render_pass_create_present(swapchain.format.format, depth_image.format, &ldevice);
     Framebuffers   frame_buffers       = frame_buffers_create(&swapchain, present_render_pass, &depth_image);
     CommandBuffers cmd_bufs            = command_buffers_allocate(&ldevice, cmd_pool, swapchain.image_count);
 
@@ -202,7 +202,7 @@ main(S32 argc, char *argv[])
     VkDescriptorPool imgui_desc_pool = gui_init(window, instance, pdevice, &ldevice, swapchain.image_count, present_render_pass, cmd_pool);
 
     // after loading models when we know which materials are used
-    materials_write_descriptors(pdevice, &ldevice, cmd_pool, &pbr_renderer.desc_set, &materials);
+    materials_write_descriptors(&materials, pdevice, &ldevice, cmd_pool, &pbr_renderer.desc_set);
 
     // write diffuse textures to descriptor set
     /*
@@ -287,7 +287,7 @@ main(S32 argc, char *argv[])
         // @Todo only do on change (we can get that from update probably)
         GlobalUniforms uniforms = {camera.projection, camera.view, camera.position};
         pbr_renderer_update_uniforms(&pbr_renderer, cmd_buf, &uniforms);
-        pbr_renderer_render(&swapchain, cmd_buf, &pbr_renderer, &model, 1, clear_colors);
+        pbr_renderer_render(&pbr_renderer, &swapchain, cmd_buf, &model, 1, clear_colors);
 
         // Render UI
         {
@@ -325,19 +325,19 @@ main(S32 argc, char *argv[])
 
     vkDestroyDescriptorPool(ldevice.handle, imgui_desc_pool, 0);
 
-    model_free(&ldevice, &model);
-    diffuse_textures_free(&ldevice, &diffuse_textures);
-    materials_free(&ldevice, &materials);
-    postprocess_destroy(&ldevice, &postprocess);
-    pbr_renderer_destroy(&ldevice, &pbr_renderer);
-    command_buffers_free(&ldevice, cmd_pool, &cmd_bufs);
-    frame_buffers_destroy(&ldevice, &frame_buffers);
-    render_pass_destroy(&ldevice, present_render_pass);
-    image_destroy(&ldevice, &depth_image);
+    model_free(&model, &ldevice);
+    diffuse_textures_free(&diffuse_textures, &ldevice);
+    materials_free(&materials, &ldevice);
+    postprocess_destroy(&postprocess, &ldevice);
+    pbr_renderer_destroy(&pbr_renderer, &ldevice);
+    command_buffers_free(&cmd_bufs, &ldevice, cmd_pool);
+    frame_buffers_destroy(&frame_buffers, &ldevice);
+    render_pass_destroy(present_render_pass, &ldevice);
+    image_destroy(&depth_image, &ldevice);
     swapchain_destroy(&swapchain);
-    command_pool_destroy(&ldevice, cmd_pool);
+    command_pool_destroy(cmd_pool, &ldevice);
     logical_device_destroy(&ldevice);
-    surface_destroy(instance, surface);
+    surface_destroy(surface, instance);
     vulkan_instance_destroy(instance);
 
     glfwDestroyWindow(window);

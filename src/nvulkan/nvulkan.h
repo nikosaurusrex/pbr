@@ -111,7 +111,7 @@ VkInstance vulkan_instance_create(const char *name, int version, const char **ex
 void       vulkan_instance_destroy(VkInstance instance);
 
 VkSurfaceKHR surface_create(VkInstance instance, GLFWwindow *glfw_window);
-void         surface_destroy(VkInstance instance, VkSurfaceKHR surface);
+void         surface_destroy(VkSurfaceKHR surface, VkInstance instance);
 
 VkPhysicalDevice physical_device_find_compatible(VkInstance instance, const char **required_extensions, U32 required_extension_count);
 
@@ -119,59 +119,60 @@ Device logical_device_create(VkSurfaceKHR surface, VkPhysicalDevice pdevice, con
                              const char **layers, U32 layer_count);
 void   logical_device_destroy(Device *ldevice);
 
-Swapchain swapchain_create(VkSurfaceKHR surface, VkPhysicalDevice pdevice, Device *ldevice, VkCommandPool cmd_pool, U32 image_count);
+Swapchain swapchain_create(U32 image_count, VkSurfaceKHR surface, VkPhysicalDevice pdevice, Device *ldevice, VkCommandPool cmd_pool);
 void      swapchain_update(Swapchain *sc, VkCommandPool cmd_pool, B8 vsync);
 void      swapchain_destroy(Swapchain *sc);
 U32       swapchain_acquire(Swapchain *sc);
 void      swapchain_present(Swapchain *sc, CommandBuffers *cmd_bufs);
 
 VkCommandPool command_pool_create(Device *ldevice);
-void          command_pool_destroy(Device *ldevice, VkCommandPool cmd_pool);
+void          command_pool_destroy(VkCommandPool cmd_pool, Device *ldevice);
 
 VkCommandBuffer command_buffer_allocate(Device *ldevice, VkCommandPool cmd_pool);
-void            command_buffer_free(Device *ldevice, VkCommandPool cmd_pool, VkCommandBuffer cmd_buf);
+void            command_buffer_free(VkCommandBuffer cmd_buf, Device *ldevice, VkCommandPool cmd_pool);
 void            command_buffer_begin(VkCommandBuffer cmd_buf);
 void            command_buffer_end(VkCommandBuffer cmd_buf);
-void            command_buffer_submit(Device *ldevice, VkCommandBuffer cmd_buf);
+void            command_buffer_submit(VkCommandBuffer cmd_buf, Device *ldevice);
 
 CommandBuffers command_buffers_allocate(Device *ldevice, VkCommandPool cmd_pool, U32 count);
-void           command_buffers_free(Device *ldevice, VkCommandPool cmd_pool, CommandBuffers *cmd_bufs);
+void           command_buffers_free(CommandBuffers *cmd_bufs, Device *ldevice, VkCommandPool cmd_pool);
 
-Image image_create(VkPhysicalDevice pdevice, Device *ldevice, VkFormat format, U32 width, U32 height, U32 mip_levels,
-                   VkImageAspectFlags aspect_mask, VkImageUsageFlags usage);
-void  image_destroy(Device *ldevice, Image *image);
-void  image_transition_layout(VkCommandBuffer cmd_buf, Image *image, VkImageLayout old_layout, VkImageLayout new_layout,
-                              VkImageAspectFlags aspect_mask);
+Image image_create(U32 width, U32 height, VkFormat format, U32 mip_levels, VkImageAspectFlags aspect_mask, VkImageUsageFlags usage,
+                   VkPhysicalDevice pdevice, Device *ldevice);
+void  image_destroy(Image *image, Device *ldevice);
 Image image_create_depth(VkPhysicalDevice pdevice, Device *ldevice, Swapchain *sc, VkCommandPool cmd_pool);
 
-Texture texture_create(VkPhysicalDevice pdevice, Device *ldevice, VkFormat format, U32 width, U32 height, VkImageAspectFlags aspect_mask,
-                       VkImageUsageFlags usage);
-Texture texture_from_pixels(VkPhysicalDevice pdevice, Device *ldevice, VkCommandPool cmd_pool, VkFormat format, U32 width, U32 height,
-                            U32 channels, U8 *pixels, VkSamplerCreateInfo sampler_info);
-void    texture_destroy(Device *ldevice, Texture *t);
+Texture texture_create(U32 width, U32 height, VkFormat format, VkImageAspectFlags aspect_mask, VkImageUsageFlags usage,
+                       VkPhysicalDevice pdevice, Device *ldevice);
+Texture texture_from_pixels(U32 width, U32 height, U32 channels, VkFormat format, U8 *pixels, VkSamplerCreateInfo sampler_info,
+                            VkPhysicalDevice pdevice, Device *ldevice, VkCommandPool cmd_pool);
+void    texture_destroy(Texture *t, Device *ldevice);
 
-VkRenderPass render_pass_create_present(Device *ldevice, VkFormat color_format, VkFormat depth_format);
-VkRenderPass render_pass_create_offscreen(Device *ldevice, VkFormat color_format, VkFormat depth_format);
-void         render_pass_destroy(Device *ldevice, VkRenderPass render_pass);
+void  image_transition_layout(Image *image, VkImageLayout old_layout, VkImageLayout new_layout, VkImageAspectFlags aspect_mask,
+                              VkCommandBuffer cmd_buf);
+
+VkRenderPass render_pass_create_present(VkFormat color_format, VkFormat depth_format, Device *ldevice);
+VkRenderPass render_pass_create_offscreen(VkFormat color_format, VkFormat depth_format, Device *ldevice);
+void         render_pass_destroy(VkRenderPass render_pass, Device *ldevice);
 
 VkFramebuffer frame_buffer_create(Swapchain *sc, VkRenderPass render_pass, VkImageView color_view, VkImageView depth_view);
-void          frame_buffer_destroy(Device *ldevice, VkFramebuffer framebuffer);
+void          frame_buffer_destroy(VkFramebuffer framebuffer, Device *ldevice);
 
 Framebuffers frame_buffers_create(Swapchain *sc, VkRenderPass render_pass, Image *depth_image);
-void         frame_buffers_destroy(Device *ldevice, Framebuffers *framebuffers);
+void         frame_buffers_destroy(Framebuffers *framebuffers, Device *ldevice);
 
-DescriptorSet descriptor_set_create(Device *ldevice, VkDescriptorSetLayoutBinding *bindings, U32 binding_count);
-void          descriptor_set_destroy(Device *ldevice, DescriptorSet *descriptor_set);
+DescriptorSet descriptor_set_create(VkDescriptorSetLayoutBinding *bindings, U32 binding_count, Device *ldevice);
+void          descriptor_set_destroy(DescriptorSet *descriptor_set, Device *ldevice);
 
 Pipeline pipeline_create(Device *ldevice, DescriptorSet *desc_set, VkRenderPass render_pass, Shader *shaders, U32 shader_count,
                          VkVertexInputBindingDescription *binding_descriptions, U32 binding_description_count,
                          VkVertexInputAttributeDescription *attribute_descriptions, U32 attribute_description_count, U32 cull_mode);
-void     pipeline_destroy(Device *ldevice, Pipeline *pipeline);
+void     pipeline_destroy(Pipeline *pipeline, Device *ldevice);
 
-Buffer buffer_create(VkPhysicalDevice pdevice, Device *ldevice, VkCommandPool cmd_pool, VkBufferUsageFlags usage, void *data,
-                     VkDeviceSize size);
-Buffer buffer_create_staging(VkPhysicalDevice pdevice, Device *ldevice, VkDeviceSize size, void *data);
-void   buffer_destroy(Device *ldevice, Buffer *buffer);
+Buffer buffer_create(VkDeviceSize size, void *data, VkBufferUsageFlags usage, VkPhysicalDevice pdevice, Device *ldevice,
+                     VkCommandPool cmd_pool);
+Buffer buffer_create_staging(VkDeviceSize size, void *data, VkPhysicalDevice pdevice, Device *ldevice);
+void   buffer_destroy(Buffer *buffer, Device *ldevice);
 
 // @Todo move somewhere
 static inline U32

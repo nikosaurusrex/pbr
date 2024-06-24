@@ -23,7 +23,7 @@ frame_buffer_create(Swapchain *sc, VkRenderPass render_pass, VkImageView color_v
 }
 
 void
-frame_buffer_destroy(Device *ldevice, VkFramebuffer framebuffer)
+frame_buffer_destroy(VkFramebuffer framebuffer, Device *ldevice)
 {
     vkDestroyFramebuffer(ldevice->handle, framebuffer, g_allocator);
 }
@@ -56,7 +56,7 @@ frame_buffers_create(Swapchain *sc, VkRenderPass render_pass, Image *depth_image
 }
 
 void
-frame_buffers_destroy(Device *ldevice, Framebuffers *framebuffers)
+frame_buffers_destroy(Framebuffers *framebuffers, Device *ldevice)
 {
     for (U32 i = 0; i < framebuffers->count; ++i) {
         vkDestroyFramebuffer(ldevice->handle, framebuffers->handles[i], g_allocator);

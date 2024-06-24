@@ -4,7 +4,7 @@
 static VkAllocationCallbacks *g_allocator = 0;
 
 DescriptorSet
-descriptor_set_create(Device *ldevice, VkDescriptorSetLayoutBinding *bindings, U32 binding_count)
+descriptor_set_create(VkDescriptorSetLayoutBinding *bindings, U32 binding_count, Device *ldevice)
 {
     DescriptorSet desc_set = {0};
 
@@ -61,7 +61,7 @@ descriptor_set_create(Device *ldevice, VkDescriptorSetLayoutBinding *bindings, U
 }
 
 void
-descriptor_set_destroy(Device *ldevice, DescriptorSet *descriptor_set)
+descriptor_set_destroy(DescriptorSet *descriptor_set, Device *ldevice)
 {
     // vkFreeDescriptorSets(ldevice->handle, descriptor_set->pool, 1, &descriptor_set->handle);
     vkDestroyDescriptorPool(ldevice->handle, descriptor_set->pool, g_allocator);

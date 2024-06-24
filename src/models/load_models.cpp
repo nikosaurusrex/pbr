@@ -106,12 +106,12 @@ model_load(VkPhysicalDevice pdevice, Device *ldevice, VkCommandPool cmd_pool, Mo
     }
 
     m->vertex_buffer =
-        buffer_create(pdevice, ldevice, cmd_pool, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, (void *)vertices, vertex_count * sizeof(Vertex));
+        buffer_create(vertex_count * sizeof(Vertex), (void *)vertices, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, pdevice, ldevice, cmd_pool);
     m->index_buffer =
-        buffer_create(pdevice, ldevice, cmd_pool, VK_BUFFER_USAGE_INDEX_BUFFER_BIT, (void *)indices, index_count * sizeof(U32));
+        buffer_create(index_count * sizeof(U32), (void *)indices, VK_BUFFER_USAGE_INDEX_BUFFER_BIT, pdevice, ldevice, cmd_pool);
     m->material_index_buffer =
-        buffer_create(pdevice, ldevice, cmd_pool, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
-                      (void *)material_indices, material_index_count * sizeof(U32));
+        buffer_create(material_index_count * sizeof(U32), (void *)material_indices,
+                      VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT, pdevice, ldevice, cmd_pool);
     m->index_count = index_count;
 
     free(vertices);
@@ -128,12 +128,4 @@ model_load(VkPhysicalDevice pdevice, Device *ldevice, VkCommandPool cmd_pool, Mo
     log_dev("Model loaded: %s with %u vertices and %u indices", path, vertex_count, index_count);
 
     return descriptor;
-}
-
-void
-model_free(Device *ldevice, Model *m)
-{
-    buffer_destroy(ldevice, &m->vertex_buffer);
-    buffer_destroy(ldevice, &m->index_buffer);
-    buffer_destroy(ldevice, &m->material_index_buffer);
 }

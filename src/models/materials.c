@@ -56,7 +56,7 @@ materials_get_index(Materials *materials, const char *name)
 }
 
 void
-materials_free(Device *ldevice, Materials *materials)
+materials_free(Materials *materials, Device *ldevice)
 {
     free(materials->materials);
     free(materials->names);
@@ -65,17 +65,17 @@ materials_free(Device *ldevice, Materials *materials)
 }
 
 void
-materials_write_descriptors(VkPhysicalDevice pdevice, Device *ldevice, VkCommandPool cmd_pool, DescriptorSet *desc_set,
-                            Materials *materials)
+materials_write_descriptors(Materials *materials, VkPhysicalDevice pdevice, Device *ldevice, VkCommandPool cmd_pool,
+                            DescriptorSet *desc_set)
 {
     if (materials->buffer.handle != VK_NULL_HANDLE) {
-        buffer_destroy(ldevice, &materials->buffer);
+        buffer_destroy(&materials->buffer, ldevice);
     }
 
     U32 size = materials->count * sizeof(Material);
 
-    materials->buffer = buffer_create(pdevice, ldevice, cmd_pool, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-                                      materials->materials, size);
+    materials->buffer = buffer_create(size, materials->materials, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+                                      pdevice, ldevice, cmd_pool);
 
     VkDescriptorBufferInfo buffer_desc = {materials->buffer.handle, 0, VK_WHOLE_SIZE};
 
