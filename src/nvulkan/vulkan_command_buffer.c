@@ -48,11 +48,11 @@ command_buffer_submit(Device *ldevice, VkCommandBuffer cmd_buf)
 }
 
 CommandBuffers
-command_buffers_allocate(Device *ldevice, VkCommandPool cmd_pool, u32 count)
+command_buffers_allocate(Device *ldevice, VkCommandPool cmd_pool, U32 count)
 {
     CommandBuffers cmd_bufs = {0};
-    cmd_bufs.count                = count;
-    cmd_bufs.handles              = malloc(count * sizeof(VkCommandBuffer));
+    cmd_bufs.count          = count;
+    cmd_bufs.handles        = malloc(count * sizeof(VkCommandBuffer));
 
     VkCommandBufferAllocateInfo alloc_info = {VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO};
     alloc_info.commandBufferCount          = count;

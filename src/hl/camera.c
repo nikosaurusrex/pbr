@@ -18,9 +18,9 @@ camera_init(Camera *c, Vec3 look_at)
 }
 
 void
-camera_resize(Camera *c, u32 width, u32 height)
+camera_resize(Camera *c, U32 width, U32 height)
 {
-    f32 aspect = (f32)width / (f32)height;
+    F32 aspect = (F32)width / (F32)height;
 
     c->projection = mat4_perspective(pi32 / 4.0f, aspect, 0.1f, 10000.0f);
     c->projection.m11 *= -1;
@@ -29,17 +29,17 @@ camera_resize(Camera *c, u32 width, u32 height)
 }
 
 void
-camera_update(Camera *c, Input *input, f32 delta)
+camera_update(Camera *c, Input *input, F32 delta)
 {
-    f32 dx = input->mouse_delta_pos.x;
-    f32 dy = input->mouse_delta_pos.y;
+    F32 dx = input->mouse_delta_pos.x;
+    F32 dy = input->mouse_delta_pos.y;
 
-    b8 middle_click = input_is_button_down(input, GLFW_MOUSE_BUTTON_MIDDLE);
-    b8 shift        = input_is_key_down(input, GLFW_KEY_LEFT_SHIFT);
+    B8 middle_click = input_is_button_down(input, GLFW_MOUSE_BUTTON_MIDDLE);
+    B8 shift        = input_is_key_down(input, GLFW_KEY_LEFT_SHIFT);
 
-    b8 moved = 0;
+    B8 moved = 0;
 
-    f32 scroll = input_get_scroll(input);
+    F32 scroll = input_get_scroll(input);
     if (scroll != 0.0f) {
         c->radius -= scroll * 2.0;
 
@@ -50,10 +50,10 @@ camera_update(Camera *c, Input *input, f32 delta)
 
     if (middle_click) {
         if (shift) {
-            f32 move_speed = c->radius / 600.0f;
+            F32 move_speed = c->radius / 600.0f;
 
-            f32 sy = sinf(c->yaw) * move_speed;
-            f32 cy = cosf(c->yaw) * move_speed;
+            F32 sy = sinf(c->yaw) * move_speed;
+            F32 cy = cosf(c->yaw) * move_speed;
 
             c->look_at.x -= dx * sy;
             c->look_at.x -= dy * cy;
@@ -80,12 +80,12 @@ camera_update(Camera *c, Input *input, f32 delta)
 void
 camera_update_view(Camera *c)
 {
-    f32 y = c->look_at.y + sinf(c->pitch) * c->radius;
-    f32 h = cosf(c->pitch) * c->radius;
+    F32 y = c->look_at.y + sinf(c->pitch) * c->radius;
+    F32 h = cosf(c->pitch) * c->radius;
 
-    f32 x = c->look_at.x + cosf(c->yaw) * h;
-    f32 z = c->look_at.z + sinf(c->yaw) * h;
+    F32 x = c->look_at.x + cosf(c->yaw) * h;
+    F32 z = c->look_at.z + sinf(c->yaw) * h;
 
-    c->view = mat4_lookat(vec3(x, y, z), c->look_at, vec3(0, 1, 0));
+    c->view     = mat4_lookat(vec3(x, y, z), c->look_at, vec3(0, 1, 0));
     c->position = vec3(x, y, z);
 }

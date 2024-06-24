@@ -10,23 +10,23 @@ typedef struct Input    Input;
 typedef struct MousePos MousePos;
 
 struct MousePos {
-    f32 x;
-    f32 y;
+    F32 x;
+    F32 y;
 };
 
 struct Input {
     GLFWwindow *window;
     MousePos    mouse_pos;
     MousePos    mouse_delta_pos;
-    b8          locked;
+    B8          locked;
 };
 
 void input_init(Input *input, GLFWwindow *window);
 void input_update(Input *input);
 
-float input_get_scroll(Input *input);
+F32 input_get_scroll(Input *input);
 
-b8 input_is_key_down(Input *input, u16 key);
-b8 input_is_button_down(Input *input, u8 button);
+B8 input_is_key_down(Input *input, U16 key);
+B8 input_is_button_down(Input *input, U8 button);
 
 C_LINKAGE_END

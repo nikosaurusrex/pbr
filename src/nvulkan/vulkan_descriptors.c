@@ -4,7 +4,7 @@
 static VkAllocationCallbacks *g_allocator = 0;
 
 DescriptorSet
-descriptor_set_create(Device *ldevice, VkDescriptorSetLayoutBinding *bindings, u32 binding_count)
+descriptor_set_create(Device *ldevice, VkDescriptorSetLayoutBinding *bindings, U32 binding_count)
 {
     DescriptorSet desc_set = {0};
 
@@ -16,16 +16,16 @@ descriptor_set_create(Device *ldevice, VkDescriptorSetLayoutBinding *bindings, u
 
     // binding_count is an upper bound on the number of descriptor sets that can be allocated from the pool
     VkDescriptorPoolSize *pool_sizes      = malloc(binding_count * sizeof(VkDescriptorPoolSize));
-    u32                   pool_size_count = 0;
+    U32                   pool_size_count = 0;
 
-    for (u32 i = 0; i < binding_count; i++) {
+    for (U32 i = 0; i < binding_count; i++) {
         VkDescriptorSetLayoutBinding binding = bindings[i];
         if (binding.descriptorCount == 0) {
             continue;
         }
 
-        b8 found = 0;
-        for (u32 j = 0; j < pool_size_count; j++) {
+        B8 found = 0;
+        for (U32 j = 0; j < pool_size_count; j++) {
             if (pool_sizes[j].type == binding.descriptorType) {
                 pool_sizes[j].descriptorCount += binding.descriptorCount;
                 found = 1;

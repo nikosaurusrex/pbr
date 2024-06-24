@@ -1,9 +1,10 @@
 #pragma once
 
 #include "nvulkan/nvulkan.h"
+
 #include "models/models.h"
 
-VkDescriptorPool gui_init(GLFWwindow *window, VkInstance instance, VkPhysicalDevice pdevice, Device *ldevice, uint32_t image_count,
+VkDescriptorPool gui_init(GLFWwindow *window, VkInstance instance, VkPhysicalDevice pdevice, Device *ldevice, U32 image_count,
                           VkRenderPass render_pass, VkCommandPool cmd_pool);
 void             gui_deinit();
 

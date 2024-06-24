@@ -4,17 +4,17 @@
 static VkAllocationCallbacks *g_allocator = 0;
 
 VkPhysicalDevice
-physical_device_find_compatible(VkInstance instance, const char **required_extensions, u32 required_extension_count)
+physical_device_find_compatible(VkInstance instance, const char **required_extensions, U32 required_extension_count)
 {
     // Get all physical devices
-    u32 device_count;
+    U32 device_count;
     VK_CHECK(vkEnumeratePhysicalDevices(instance, &device_count, 0));
 
     VkPhysicalDevice *devices = malloc(device_count * sizeof(VkPhysicalDevice));
     VK_CHECK(vkEnumeratePhysicalDevices(instance, &device_count, devices));
 
     // Check for compatability
-    for (u32 i = 0; i < device_count; ++i) {
+    for (U32 i = 0; i < device_count; ++i) {
         VkPhysicalDevice device = devices[i];
 
         VkPhysicalDeviceProperties properties;
@@ -25,19 +25,19 @@ physical_device_find_compatible(VkInstance instance, const char **required_exten
             continue;
         }
 
-        u32 device_extension_count;
+        U32 device_extension_count;
         VK_CHECK(vkEnumerateDeviceExtensionProperties(device, 0, &device_extension_count, 0));
 
         VkExtensionProperties *device_extensions = malloc(device_extension_count * sizeof(VkExtensionProperties));
         VK_CHECK(vkEnumerateDeviceExtensionProperties(device, 0, &device_extension_count, device_extensions));
 
-        b8 compatible = 1;
+        B8 compatible = 1;
 
         for (int j = 0; j < required_extension_count; ++j) {
             const char *required_extension = required_extensions[j];
-            b8          found              = 0;
+            B8          found              = 0;
 
-            for (s32 k = 0; k < device_extension_count; ++k) {
+            for (S32 k = 0; k < device_extension_count; ++k) {
                 VkExtensionProperties device_extension = device_extensions[k];
 
                 if (strcmp(device_extension.extensionName, required_extension) == 0) {

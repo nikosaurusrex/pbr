@@ -5,14 +5,14 @@
 // Keep this here so we know later where we have to use it
 static VkAllocationCallbacks *g_allocator = 0;
 
-static u32
-get_mip_levels(u32 width, u32 height)
+static U32
+get_mip_levels(U32 width, U32 height)
 {
-    return (u32)(floorf(log2f((f32)Max(width, height)))) + 1;
+    return (U32)(floorf(log2f((F32)Max(width, height)))) + 1;
 }
 
 Image
-image_create(VkPhysicalDevice pdevice, Device *ldevice, VkFormat format, u32 width, u32 height, u32 mip_levels,
+image_create(VkPhysicalDevice pdevice, Device *ldevice, VkFormat format, U32 width, U32 height, U32 mip_levels,
              VkImageAspectFlags aspect_mask, VkImageUsageFlags usage)
 {
     // Create image handle
@@ -73,7 +73,7 @@ image_destroy(Device *ldevice, Image *image)
 }
 
 Texture
-texture_create(VkPhysicalDevice pdevice, Device *ldevice, VkFormat format, u32 width, u32 height, VkImageAspectFlags aspect_mask,
+texture_create(VkPhysicalDevice pdevice, Device *ldevice, VkFormat format, U32 width, U32 height, VkImageAspectFlags aspect_mask,
                VkImageUsageFlags usage)
 {
     Texture t = {0};
@@ -89,8 +89,8 @@ texture_create(VkPhysicalDevice pdevice, Device *ldevice, VkFormat format, u32 w
     return t;
 }
 Texture
-texture_from_pixels(VkPhysicalDevice pdevice, Device *ldevice, VkCommandPool cmd_pool, VkFormat format, u32 width, u32 height, u32 channels,
-                    u8 *pixels, VkSamplerCreateInfo sampler_info)
+texture_from_pixels(VkPhysicalDevice pdevice, Device *ldevice, VkCommandPool cmd_pool, VkFormat format, U32 width, U32 height, U32 channels,
+                    U8 *pixels, VkSamplerCreateInfo sampler_info)
 {
     Texture t = {0};
 

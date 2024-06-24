@@ -4,9 +4,9 @@
 static VkAllocationCallbacks *g_allocator = 0;
 
 Pipeline
-pipeline_create(Device *ldevice, DescriptorSet *desc_set, VkRenderPass render_pass, Shader *shaders, u32 shader_count,
-                VkVertexInputBindingDescription *binding_descriptions, u32 binding_description_count,
-                VkVertexInputAttributeDescription *attribute_descriptions, u32 attribute_description_count, u32 cull_mode)
+pipeline_create(Device *ldevice, DescriptorSet *desc_set, VkRenderPass render_pass, Shader *shaders, U32 shader_count,
+                VkVertexInputBindingDescription *binding_descriptions, U32 binding_description_count,
+                VkVertexInputAttributeDescription *attribute_descriptions, U32 attribute_description_count, U32 cull_mode)
 {
     Pipeline p = {0};
 
@@ -17,7 +17,7 @@ pipeline_create(Device *ldevice, DescriptorSet *desc_set, VkRenderPass render_pa
     p.attribute_descriptions      = attribute_descriptions;
     p.attribute_description_count = attribute_description_count;
 
-    for (u32 i = 0; i < shader_count; ++i) {
+    for (U32 i = 0; i < shader_count; ++i) {
         FILE *f = fopen(shaders[i].path, "rb");
         if (!f) {
             fprintf(stderr, "Failed to open shader file: %s\n", shaders[i].path);
@@ -36,7 +36,7 @@ pipeline_create(Device *ldevice, DescriptorSet *desc_set, VkRenderPass render_pa
 
         VkShaderModuleCreateInfo module_info = {VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO};
         module_info.codeSize                 = size;
-        module_info.pCode                    = (u32 *)code;
+        module_info.pCode                    = (U32 *)code;
 
         VkShaderModule module;
         VK_CHECK(vkCreateShaderModule(ldevice->handle, &module_info, g_allocator, &module));
@@ -127,7 +127,7 @@ pipeline_create(Device *ldevice, DescriptorSet *desc_set, VkRenderPass render_pa
 void
 pipeline_destroy(Device *ldevice, Pipeline *pipeline)
 {
-    for (u32 i = 0; i < pipeline->shader_count; ++i) {
+    for (U32 i = 0; i < pipeline->shader_count; ++i) {
         vkDestroyShaderModule(ldevice->handle, pipeline->shader_stages[i].module, g_allocator);
     }
     free(pipeline->shader_stages);

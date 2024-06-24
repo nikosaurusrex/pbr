@@ -16,7 +16,7 @@
 
 // Keep this here so we know later where we have to use it
 static VkAllocationCallbacks *g_allocator = 0;
-static b8                     g_show_gui  = false;
+static B8                     g_show_gui  = false;
 
 static void
 check_vk_result(VkResult err)
@@ -87,7 +87,7 @@ struct WindowPointerInfo {
 };
 
 void
-resize_callback(GLFWwindow *window, s32 width, s32 height)
+resize_callback(GLFWwindow *window, S32 width, S32 height)
 {
     WindowPointerInfo *info = (WindowPointerInfo *)glfwGetWindowUserPointer(window);
 
@@ -129,7 +129,7 @@ resize_callback(GLFWwindow *window, s32 width, s32 height)
 }
 
 void
-key_callback(GLFWwindow *window, s32 key, s32 scancode, s32 action, s32 mods)
+key_callback(GLFWwindow *window, S32 key, S32 scancode, S32 action, S32 mods)
 {
     WindowPointerInfo *info = (WindowPointerInfo *)glfwGetWindowUserPointer(window);
 
@@ -140,8 +140,8 @@ key_callback(GLFWwindow *window, s32 key, s32 scancode, s32 action, s32 mods)
     }
 }
 
-s32
-main(s32 argc, char *argv[])
+S32
+main(S32 argc, char *argv[])
 {
     glfwSetErrorCallback(glfw_error_callback);
     if (!glfwInit()) {
@@ -155,12 +155,12 @@ main(s32 argc, char *argv[])
         log_fatal("Failed to create window!");
     }
 
-    b8 raw_mouse_input = glfwRawMouseMotionSupported();
+    B8 raw_mouse_input = glfwRawMouseMotionSupported();
     if (raw_mouse_input) {
         glfwSetInputMode(window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
     }
 
-    u32          req_extension_count;
+    U32          req_extension_count;
     const char **req_extensions = glfwGetRequiredInstanceExtensions(&req_extension_count);
 
     const char *layers[] = {"VK_LAYER_KHRONOS_validation"};
@@ -208,7 +208,7 @@ main(s32 argc, char *argv[])
     /*
     if (diffuse_textures.count > 0) {
         VkDescriptorImageInfo *image_infos = (VkDescriptorImageInfo *)malloc(diffuse_textures.count * sizeof(VkDescriptorImageInfo));
-        for (u32 i = 0; i < diffuse_textures.count; i++) {
+        for (U32 i = 0; i < diffuse_textures.count; i++) {
             image_infos[i] = diffuse_textures.textures[i].descriptor;
         }
 
@@ -233,7 +233,7 @@ main(s32 argc, char *argv[])
     Camera camera;
     camera_init(&camera, vec3(0.0, 0.0, 0.0));
     camera_resize(&camera, swapchain.width, swapchain.height);
-    
+
     WindowPointerInfo wp_info = {0};
     wp_info.cmd_pool          = cmd_pool;
     wp_info.sc                = &swapchain;
@@ -250,14 +250,14 @@ main(s32 argc, char *argv[])
     glfwSetFramebufferSizeCallback(window, resize_callback);
     glfwSetKeyCallback(window, key_callback);
 
-    f32 last_frame_time = glfwGetTime();
+    F32 last_frame_time = glfwGetTime();
 
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
 
         // calculate delta
-        f32 current_frame_time = glfwGetTime();
-        f32 delta_frame_time   = current_frame_time - last_frame_time;
+        F32 current_frame_time = glfwGetTime();
+        F32 delta_frame_time   = current_frame_time - last_frame_time;
         last_frame_time        = current_frame_time;
 
         // update input and camera
@@ -272,7 +272,7 @@ main(s32 argc, char *argv[])
         }
 
         // acquiring image from swapchain and command buffer for frame
-        u32             current_image = swapchain_acquire(&swapchain);
+        U32             current_image = swapchain_acquire(&swapchain);
         VkCommandBuffer cmd_buf       = cmd_bufs.handles[current_image];
         command_buffer_begin(cmd_buf);
 
@@ -300,7 +300,7 @@ main(s32 argc, char *argv[])
 
             vkCmdBeginRenderPass(cmd_buf, &ui_render_pass, VK_SUBPASS_CONTENTS_INLINE);
 
-            VkViewport viewport{0.0f, 0.0f, (f32)swapchain.width, (f32)swapchain.height, 0.0f, 1.0f};
+            VkViewport viewport{0.0f, 0.0f, (F32)swapchain.width, (F32)swapchain.height, 0.0f, 1.0f};
             vkCmdSetViewport(cmd_buf, 0, 1, &viewport);
 
             VkRect2D scissor{{0, 0}, {swapchain.width, swapchain.height}};

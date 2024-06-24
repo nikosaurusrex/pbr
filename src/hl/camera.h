@@ -16,14 +16,14 @@ struct Camera {
     Mat4 view;
     Vec3 position;
     Vec3 look_at;
-    f32  yaw;
-    f32  pitch;
-    f32  radius;
-    f32  sensitivity;
+    F32  yaw;
+    F32  pitch;
+    F32  radius;
+    F32  sensitivity;
 };
 
 void camera_init(Camera *c, Vec3 look_at);
-void camera_resize(Camera *c, u32 width, u32 height);
-void camera_update(Camera *c, Input *input, f32 delta);
+void camera_resize(Camera *c, U32 width, U32 height);
+void camera_update(Camera *c, Input *input, F32 delta);
 
 C_LINKAGE_END

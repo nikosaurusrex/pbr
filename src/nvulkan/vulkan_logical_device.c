@@ -4,13 +4,13 @@
 static VkAllocationCallbacks *g_allocator = 0;
 
 Device
-logical_device_create(VkSurfaceKHR surface, VkPhysicalDevice pdevice, const char **extensions, u32 extension_count, const char **layers,
-                      u32 layer_count)
+logical_device_create(VkSurfaceKHR surface, VkPhysicalDevice pdevice, const char **extensions, U32 extension_count, const char **layers,
+                      U32 layer_count)
 {
     VkPhysicalDeviceMemoryProperties memory_properties;
     vkGetPhysicalDeviceMemoryProperties(pdevice, &memory_properties);
 
-    u32 queue_family_count;
+    U32 queue_family_count;
     vkGetPhysicalDeviceQueueFamilyProperties(pdevice, &queue_family_count, 0);
 
     VkQueueFamilyProperties *queue_families = malloc(queue_family_count * sizeof(VkQueueFamilyProperties));
@@ -19,14 +19,14 @@ logical_device_create(VkSurfaceKHR surface, VkPhysicalDevice pdevice, const char
     // Setup device queues
     VkDeviceQueueCreateInfo queue_create_infos[1];
 
-    f32 queue_priority = 1.0f;
+    F32 queue_priority = 1.0f;
 
-    u32 graphics_index = ~0u;
-    for (u32 i = 0; i < queue_family_count; ++i) {
+    U32 graphics_index = ~0u;
+    for (U32 i = 0; i < queue_family_count; ++i) {
         VkQueueFamilyProperties queue_family = queue_families[i];
 
         if ((queue_family.queueFlags & VK_QUEUE_GRAPHICS_BIT)) {
-            b32 present_supported = VK_FALSE;
+            B32 present_supported = VK_FALSE;
             vkGetPhysicalDeviceSurfaceSupportKHR(pdevice, i, surface, &present_supported);
 
             if (!present_supported) {

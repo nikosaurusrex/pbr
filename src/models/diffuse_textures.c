@@ -11,10 +11,10 @@ diffuse_textures_init(DiffuseTextures *textures)
 void
 diffuse_textures_add(DiffuseTextures *textures, Texture texture)
 {
-    Assert(textures->count < max_u32);
+    Assert(textures->count < max_U32);
 
     if (textures->count + 1 >= textures->capacity) {
-        Assert(textures->capacity < max_u32 / 2);
+        Assert(textures->capacity < max_U32 / 2);
         textures->capacity *= 2;
 
         textures->textures = (Texture *)realloc(textures->textures, textures->capacity * sizeof(Texture));
@@ -25,7 +25,8 @@ diffuse_textures_add(DiffuseTextures *textures, Texture texture)
 }
 
 void
-diffuse_textures_add_from_path(DiffuseTextures *textures, const char *path, VkPhysicalDevice pdevice, Device *ldevice, VkCommandPool cmd_pool)
+diffuse_textures_add_from_path(DiffuseTextures *textures, const char *path, VkPhysicalDevice pdevice, Device *ldevice,
+                               VkCommandPool cmd_pool)
 {
     VkSamplerCreateInfo sampler_info = {VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO};
     sampler_info.minFilter           = VK_FILTER_LINEAR;
@@ -35,8 +36,8 @@ diffuse_textures_add_from_path(DiffuseTextures *textures, const char *path, VkPh
 
     VkFormat format = VK_FORMAT_R8G8B8A8_SRGB;
 
-    s32 width, height, channels;
-    u8 *pixels = stbi_load(path, &width, &height, &channels, STBI_rgb_alpha);
+    S32 width, height, channels;
+    U8 *pixels = stbi_load(path, &width, &height, &channels, STBI_rgb_alpha);
     if (!pixels) {
         log_fatal("Failed to load texture: %s", path);
     }
@@ -49,7 +50,7 @@ diffuse_textures_add_from_path(DiffuseTextures *textures, const char *path, VkPh
 void
 diffuse_textures_free(Device *ldevice, DiffuseTextures *textures)
 {
-    for (u32 i = 0; i < textures->count; ++i) {
+    for (U32 i = 0; i < textures->count; ++i) {
         texture_destroy(ldevice, &textures->textures[i]);
     }
 

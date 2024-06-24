@@ -11,13 +11,13 @@ materials_init(Materials *materials)
                   (Material){.albedo = vec4(0.123f, 0.0f, 0.754f, 1.0f), .metallic = 0.0f, .specular = 0.0f, .roughness = 0.0f});
 }
 
-u32
+U32
 materials_add(Materials *materials, const char *name, Material mat)
 {
-    Assert(materials->count < max_u32);
+    Assert(materials->count < max_U32);
 
     if (materials->count + 1 >= materials->capacity) {
-        Assert(materials->capacity < max_u32 / 2);
+        Assert(materials->capacity < max_U32 / 2);
         materials->capacity *= 2;
 
         materials->materials = (Material *)realloc(materials->materials, materials->capacity * sizeof(Material));
@@ -31,10 +31,10 @@ materials_add(Materials *materials, const char *name, Material mat)
     return materials->count - 1;
 }
 
-u8
+B8
 materials_has(Materials *materials, const char *name)
 {
-    for (u32 i = 0; i < materials->count; ++i) {
+    for (U32 i = 0; i < materials->count; ++i) {
         if (strcmp(materials->names[i], name) == 0) {
             return 1;
         }
@@ -43,16 +43,16 @@ materials_has(Materials *materials, const char *name)
     return 0;
 }
 
-u32
+U32
 materials_get_index(Materials *materials, const char *name)
 {
-    for (u32 i = 0; i < materials->count; ++i) {
+    for (U32 i = 0; i < materials->count; ++i) {
         if (strcmp(materials->names[i], name) == 0) {
             return i;
         }
     }
 
-    return max_u32;
+    return max_U32;
 }
 
 void
@@ -72,7 +72,7 @@ materials_write_descriptors(VkPhysicalDevice pdevice, Device *ldevice, VkCommand
         buffer_destroy(ldevice, &materials->buffer);
     }
 
-    u32 size = materials->count * sizeof(Material);
+    U32 size = materials->count * sizeof(Material);
 
     materials->buffer = buffer_create(pdevice, ldevice, cmd_pool, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
                                       materials->materials, size);

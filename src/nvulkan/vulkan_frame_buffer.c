@@ -45,7 +45,7 @@ frame_buffers_create(Swapchain *sc, VkRenderPass render_pass, Image *depth_image
 
     framebuffers.count   = sc->image_count;
     framebuffers.handles = malloc(framebuffers.count * sizeof(VkFramebuffer));
-    for (u32 i = 0; i < framebuffers.count; ++i) {
+    for (U32 i = 0; i < framebuffers.count; ++i) {
         attachments[0] = sc->image_views[i];
         attachments[1] = depth_image->view;
 
@@ -58,7 +58,7 @@ frame_buffers_create(Swapchain *sc, VkRenderPass render_pass, Image *depth_image
 void
 frame_buffers_destroy(Device *ldevice, Framebuffers *framebuffers)
 {
-    for (u32 i = 0; i < framebuffers->count; ++i) {
+    for (U32 i = 0; i < framebuffers->count; ++i) {
         vkDestroyFramebuffer(ldevice->handle, framebuffers->handles[i], g_allocator);
     }
 

@@ -5,7 +5,7 @@
 #include "imgui.h"
 
 VkDescriptorPool
-gui_init(GLFWwindow *window, VkInstance instance, VkPhysicalDevice pdevice, Device *ldevice, uint32_t image_count, VkRenderPass render_pass,
+gui_init(GLFWwindow *window, VkInstance instance, VkPhysicalDevice pdevice, Device *ldevice, U32 image_count, VkRenderPass render_pass,
          VkCommandPool cmd_pool)
 {
     // Setup Dear ImGui context
@@ -96,7 +96,7 @@ gui_render_materials(Materials *materials)
 
     ImGui::Begin("Materials");
 
-    for (u32 i = 0; i < materials->count; ++i) {
+    for (U32 i = 0; i < materials->count; ++i) {
         ImGui::PushID(i);
 
         char buf[20];

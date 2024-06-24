@@ -22,7 +22,7 @@ struct GlobalUniforms {
     Mat4 proj_matrix;
     Mat4 view_matrix;
     Vec3 view_pos;
-    f32  _pad1;
+    F32  _pad1;
 };
 
 struct Vertex {
@@ -40,44 +40,44 @@ struct Material {
     Vec4 specular;
     Vec4 transmittance;
     Vec4 emission;
-    f32  shininess;
-    f32  ior;
-    f32  dissolve;
+    F32  shininess;
+    F32  ior;
+    F32  dissolve;
     s32  illum;
     s32  texture_offset;
 };*/
 
 struct Material {
     Vec4 albedo;
-    f32  metallic;
-    f32  specular;
-    f32  roughness;
-    f32  _pad;
+    F32  metallic;
+    F32  specular;
+    F32  roughness;
+    F32  _pad;
 };
 
 struct Materials {
     Material    *materials;
     const char **names;
-    u32          count;
-    u32          capacity;
+    U32          count;
+    U32          capacity;
     Buffer       buffer;
 };
 
 struct DiffuseTextures {
     Texture *textures;
-    u32      count;
-    u32      capacity;
+    U32      count;
+    U32      capacity;
 };
 
 struct ModelDescriptor {
-    u64 material_index_buffer_address;
+    U64 material_index_buffer_address;
 };
 
 struct Model {
     Buffer vertex_buffer;
     Buffer index_buffer;
     Buffer material_index_buffer;
-    u32    index_count;
+    U32    index_count;
 };
 
 /*
@@ -104,9 +104,9 @@ struct PBRRenderer {
 };
 
 void materials_init(Materials *materials);
-u32  materials_add(Materials *materials, const char *name, Material mat);
-u8   materials_has(Materials *materials, const char *name);
-u32  materials_get_index(Materials *materials, const char *name);
+U32  materials_add(Materials *materials, const char *name, Material mat);
+B8   materials_has(Materials *materials, const char *name);
+U32  materials_get_index(Materials *materials, const char *name);
 void materials_free(Device *ldevice, Materials *materials);
 void materials_write_descriptors(VkPhysicalDevice pdevice, Device *ldevice, VkCommandPool cmd_pool, DescriptorSet *desc_set,
                                  Materials *materials);
@@ -128,7 +128,7 @@ void models_write_descriptors(VkPhysicalDevice pdevice, Device *ldevice, VkComma
 PBRRenderer pbr_renderer_create(VkPhysicalDevice pdevice, Device *ldevice, Swapchain *sc, VkCommandPool cmd_pool, VkFormat depth_format,
                                 uint32_t diffuse_texture_count);
 void        pbr_renderer_destroy(Device *ldevice, PBRRenderer *r);
-void        pbr_renderer_render(Swapchain *sc, VkCommandBuffer cmd_buf, PBRRenderer *r, Model *models, u32 model_count,
+void        pbr_renderer_render(Swapchain *sc, VkCommandBuffer cmd_buf, PBRRenderer *r, Model *models, U32 model_count,
                                 VkClearValue *clear_colors);
 void        pbr_renderer_update_uniforms(PBRRenderer *r, VkCommandBuffer cmd_buf, GlobalUniforms *uniforms);
 
@@ -136,7 +136,7 @@ void        pbr_renderer_update_uniforms(PBRRenderer *r, VkCommandBuffer cmd_buf
 SceneRenderer scene_renderer_create(VkPhysicalDevice pdevice, Device *ldevice, Swapchain *sc, VkCommandPool cmd_pool, VkFormat depth_format,
                                     uint32_t diffuse_texture_count);
 void          scene_renderer_destroy(Device *ldevice, SceneRenderer *r);
-void          scene_renderer_render(Swapchain *sc, VkCommandBuffer cmd_buf, SceneRenderer *r, Model *models, u32 model_count,
+void          scene_renderer_render(Swapchain *sc, VkCommandBuffer cmd_buf, SceneRenderer *r, Model *models, U32 model_count,
                                     VkClearValue *clear_colors);
 void          scene_renderer_update_uniforms(SceneRenderer *r, VkCommandBuffer cmd_buf, GlobalUniforms *uniforms);
 */

@@ -9,12 +9,12 @@ ModelDescriptor
 model_load(VkPhysicalDevice pdevice, Device *ldevice, VkCommandPool cmd_pool, Model *m, Materials *materials,
            DiffuseTextures *diffuse_textures, const char *path)
 {
-    u32     vertex_count         = 0;
+    U32     vertex_count         = 0;
     Vertex *vertices             = 0;
-    u32     index_count          = 0;
-    u32    *indices              = 0;
-    u32     material_index_count = 0;
-    u32    *material_indices     = 0;
+    U32     index_count          = 0;
+    U32    *indices              = 0;
+    U32     material_index_count = 0;
+    U32    *material_indices     = 0;
 
     tinyobj::ObjReader reader;
     reader.ParseFromFile(path);
@@ -22,16 +22,13 @@ model_load(VkPhysicalDevice pdevice, Device *ldevice, VkCommandPool cmd_pool, Mo
     const tinyobj::attrib_t &attrib = reader.GetAttrib();
 
     // because we store all materials in a single array, local material index have to be mapped to global material index
-    std::unordered_map<s32, u32> mat_index_map = {};
+    std::unordered_map<S32, U32> mat_index_map = {};
     mat_index_map.insert({-1, 0}); // means that if no material, then use default material
 
-    /* We don't load material anymore because we load wavefront object files and they don't store information for pbr materials like roughness,
-       so until we use some other loader and other format like assimp and glTF, we have to just load the vertex information and set the materials manually 
-    u32 mat_index = 0;
-    for (const auto &obj_mat : reader.GetMaterials()) {
-        u32 existing_index = materials_get_index(materials, obj_mat.name.c_str());
-        if (existing_index != UINT32_MAX) {
-            mat_index_map[mat_index] = existing_index;
+    /* We don't load material anymore because we load wavefront object files and they don't store information for pbr materials like
+    roughness, so until we use some other loader and other format like assimp and glTF, we have to just load the vertex information and set
+    the materials manually U32 mat_index = 0; for (const auto &obj_mat : reader.GetMaterials()) { U32 existing_index =
+    materials_get_index(materials, obj_mat.name.c_str()); if (existing_index != UINT32_MAX) { mat_index_map[mat_index] = existing_index;
             mat_index++;
             continue;
         }
@@ -58,7 +55,7 @@ model_load(VkPhysicalDevice pdevice, Device *ldevice, VkCommandPool cmd_pool, Mo
             // mat.texture_offset = -1;
         }
 
-        u32 index_of_added = materials_add(materials, obj_mat.name.c_str(), mat);
+        U32 index_of_added = materials_add(materials, obj_mat.name.c_str(), mat);
 
         mat_index_map[mat_index] = index_of_added;
 
@@ -66,24 +63,24 @@ model_load(VkPhysicalDevice pdevice, Device *ldevice, VkCommandPool cmd_pool, Mo
     }*/
 
     // map every material to the default material for now
-    u32 mat_index = 0;
+    U32 mat_index = 0;
     for (const auto &obj_mat : reader.GetMaterials()) {
         mat_index_map[mat_index] = 0;
 
-        mat_index++; 
+        mat_index++;
     }
 
     for (const auto &shape : reader.GetShapes()) {
         vertices         = (Vertex *)realloc(vertices, (shape.mesh.indices.size() + vertex_count) * sizeof(Vertex));
-        indices          = (u32 *)realloc(indices, (shape.mesh.indices.size() + index_count) * sizeof(u32));
-        material_indices = (u32 *)realloc(material_indices, (shape.mesh.material_ids.size() + material_index_count) * sizeof(u32));
+        indices          = (U32 *)realloc(indices, (shape.mesh.indices.size() + index_count) * sizeof(U32));
+        material_indices = (U32 *)realloc(material_indices, (shape.mesh.material_ids.size() + material_index_count) * sizeof(U32));
 
-        for (u32 i = 0; i < shape.mesh.material_ids.size(); i++) {
+        for (U32 i = 0; i < shape.mesh.material_ids.size(); i++) {
             material_indices[material_index_count + i] = mat_index_map[shape.mesh.material_ids[i]];
         }
 
-        u32 vertex_index  = vertex_count;
-        u32 indices_index = index_count;
+        U32 vertex_index  = vertex_count;
+        U32 indices_index = index_count;
         for (const auto &index : shape.mesh.indices) {
             Vertex       vertex = {};
             const float *vp     = &attrib.vertices[3 * index.vertex_index];
@@ -111,10 +108,10 @@ model_load(VkPhysicalDevice pdevice, Device *ldevice, VkCommandPool cmd_pool, Mo
     m->vertex_buffer =
         buffer_create(pdevice, ldevice, cmd_pool, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, (void *)vertices, vertex_count * sizeof(Vertex));
     m->index_buffer =
-        buffer_create(pdevice, ldevice, cmd_pool, VK_BUFFER_USAGE_INDEX_BUFFER_BIT, (void *)indices, index_count * sizeof(u32));
+        buffer_create(pdevice, ldevice, cmd_pool, VK_BUFFER_USAGE_INDEX_BUFFER_BIT, (void *)indices, index_count * sizeof(U32));
     m->material_index_buffer =
         buffer_create(pdevice, ldevice, cmd_pool, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
-                      (void *)material_indices, material_index_count * sizeof(u32));
+                      (void *)material_indices, material_index_count * sizeof(U32));
     m->index_count = index_count;
 
     free(vertices);

@@ -7,8 +7,8 @@ pbr_renderer_create(VkPhysicalDevice pdevice, Device *ldevice, Swapchain *sc, Vk
     PBRRenderer r = {0};
 
     VkFormat color_format = VK_FORMAT_R32G32B32A32_SFLOAT;
-    u32      width        = sc->width;
-    u32      height       = sc->height;
+    U32      width        = sc->width;
+    U32      height       = sc->height;
 
     // Create color and depth images
     r.color_image                        = texture_create(pdevice, ldevice, color_format, width, height, VK_IMAGE_ASPECT_COLOR_BIT,
@@ -95,7 +95,7 @@ pbr_renderer_destroy(Device *ldevice, PBRRenderer *r)
 }
 
 void
-pbr_renderer_render(Swapchain *sc, VkCommandBuffer cmd_buf, PBRRenderer *r, Model *models, u32 model_count, VkClearValue *clear_colors)
+pbr_renderer_render(Swapchain *sc, VkCommandBuffer cmd_buf, PBRRenderer *r, Model *models, U32 model_count, VkClearValue *clear_colors)
 {
     VkRenderPassBeginInfo begin_info = {VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO};
     begin_info.clearValueCount       = 2;
@@ -160,8 +160,8 @@ diffuse_texture_count)
     SceneRenderer r = {0};
 
     VkFormat color_format = sc->format.format;
-    u32      width        = sc->width;
-    u32      height       = sc->height;
+    U32      width        = sc->width;
+    U32      height       = sc->height;
 
     // Create color and depth images
     r.color_image                        = texture_create(pdevice, ldevice, color_format, width, height, VK_IMAGE_ASPECT_COLOR_BIT,
@@ -248,7 +248,7 @@ scene_renderer_destroy(Device *ldevice, SceneRenderer *r)
 }
 
 void
-scene_renderer_render(Swapchain *sc, VkCommandBuffer cmd_buf, SceneRenderer *r, Model *models, u32 model_count, VkClearValue *clear_colors)
+scene_renderer_render(Swapchain *sc, VkCommandBuffer cmd_buf, SceneRenderer *r, Model *models, U32 model_count, VkClearValue *clear_colors)
 {
     VkRenderPassBeginInfo begin_info = {VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO};
     begin_info.clearValueCount       = 2;

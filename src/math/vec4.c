@@ -1,7 +1,7 @@
 #include "math.h"
 
 Vec4
-vec4(f32 x, f32 y, f32 z, f32 w)
+vec4(F32 x, F32 y, F32 z, F32 w)
 {
     return (Vec4){x, y, z, w};
 }
