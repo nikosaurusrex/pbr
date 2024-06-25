@@ -19,16 +19,16 @@ typedef struct Model           Model;
 typedef struct PBRRenderer PBRRenderer;
 
 struct GlobalUniforms {
-    Mat4 proj_matrix;
-    Mat4 view_matrix;
-    Vec3 view_pos;
-    F32  _pad1;
+  Mat4 proj_matrix;
+  Mat4 view_matrix;
+  Vec3 view_pos;
+  F32  _pad1;
 };
 
 struct Vertex {
-    Vec3 position;
-    Vec2 tex_coords;
-    Vec3 normal;
+  Vec3 position;
+  Vec2 tex_coords;
+  Vec3 normal;
 };
 
 /*
@@ -48,36 +48,36 @@ struct Material {
 };*/
 
 struct Material {
-    Vec4 albedo;
-    F32  metallic;
-    F32  specular;
-    F32  roughness;
-    F32  _pad;
+  Vec4 albedo;
+  F32  metallic;
+  F32  specular;
+  F32  roughness;
+  F32  _pad;
 };
 
 struct Materials {
-    Material    *materials;
-    const char **names;
-    U32          count;
-    U32          capacity;
-    Buffer       buffer;
+  Material    *materials;
+  const char **names;
+  U32          count;
+  U32          capacity;
+  Buffer       buffer;
 };
 
 struct DiffuseTextures {
-    Texture *textures;
-    U32      count;
-    U32      capacity;
+  Texture *textures;
+  U32      count;
+  U32      capacity;
 };
 
 struct ModelDescriptor {
-    U64 material_index_buffer_address;
+  U64 material_index_buffer_address;
 };
 
 struct Model {
-    Buffer vertex_buffer;
-    Buffer index_buffer;
-    Buffer material_index_buffer;
-    U32    index_count;
+  Buffer vertex_buffer;
+  Buffer index_buffer;
+  Buffer material_index_buffer;
+  U32    index_count;
 };
 
 /*
@@ -94,13 +94,13 @@ struct SceneRenderer {
 };*/
 
 struct PBRRenderer {
-    Texture       color_image;
-    Texture       depth_image;
-    VkRenderPass  render_pass;
-    VkFramebuffer framebuffer;
-    DescriptorSet desc_set;
-    Pipeline      pipeline;
-    Buffer        uniforms;
+  Texture       color_image;
+  Texture       depth_image;
+  VkRenderPass  render_pass;
+  VkFramebuffer framebuffer;
+  DescriptorSet desc_set;
+  Pipeline      pipeline;
+  Buffer        uniforms;
 };
 
 void materials_init(Materials *materials);

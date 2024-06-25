@@ -50,6 +50,9 @@ project "pbr"
 		"src/base/**.c",
 	}
 
+	filter { "system:windows" }
+    files { "src/base/win/*.c" }
+
   includedirs
   {
     "vendor/glfw/include",

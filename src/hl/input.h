@@ -10,15 +10,15 @@ typedef struct Input    Input;
 typedef struct MousePos MousePos;
 
 struct MousePos {
-    F32 x;
-    F32 y;
+  F32 x;
+  F32 y;
 };
 
 struct Input {
-    GLFWwindow *window;
-    MousePos    mouse_pos;
-    MousePos    mouse_delta_pos;
-    B8          locked;
+  GLFWwindow *window;
+  MousePos    mouse_pos;
+  MousePos    mouse_delta_pos;
+  B8          locked;
 };
 
 void input_init(Input *input, GLFWwindow *window);

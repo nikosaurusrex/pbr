@@ -10,43 +10,43 @@ typedef struct Mat4 Mat4;
 C_LINKAGE_BEGIN
 
 struct Vec2 {
-    F32 x;
-    F32 y;
+  F32 x;
+  F32 y;
 };
 
 union Vec3 {
-    struct {
-        F32 x;
-        F32 y;
-        F32 z;
-    };
-    struct {
-        Vec2 xy;
-        F32  _notused1;
-    };
-    struct {
-        F32  _notused2;
-        Vec2 yz;
-    };
-};
-
-struct Vec4 {
+  struct {
     F32 x;
     F32 y;
     F32 z;
-    F32 w;
+  };
+  struct {
+    Vec2 xy;
+    F32  _notused1;
+  };
+  struct {
+    F32  _notused2;
+    Vec2 yz;
+  };
+};
+
+struct Vec4 {
+  F32 x;
+  F32 y;
+  F32 z;
+  F32 w;
 };
 
 struct Mat4 {
-    union {
-        F32 m[16];
-        struct {
-            F32 m00, m01, m02, m03;
-            F32 m10, m11, m12, m13;
-            F32 m20, m21, m22, m23;
-            F32 m30, m31, m32, m33;
-        };
+  union {
+    F32 m[16];
+    struct {
+      F32 m00, m01, m02, m03;
+      F32 m10, m11, m12, m13;
+      F32 m20, m21, m22, m23;
+      F32 m30, m31, m32, m33;
     };
+  };
 };
 
 Vec2 vec2(F32 x, F32 y);

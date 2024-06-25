@@ -12,14 +12,14 @@ C_LINKAGE_BEGIN
 typedef struct Camera Camera;
 
 struct Camera {
-    Mat4 projection;
-    Mat4 view;
-    Vec3 position;
-    Vec3 look_at;
-    F32  yaw;
-    F32  pitch;
-    F32  radius;
-    F32  sensitivity;
+  Mat4 projection;
+  Mat4 view;
+  Vec3 position;
+  Vec3 look_at;
+  F32  yaw;
+  F32  pitch;
+  F32  radius;
+  F32  sensitivity;
 };
 
 void camera_init(Camera *c, Vec3 look_at);

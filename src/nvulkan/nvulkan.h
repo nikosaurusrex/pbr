@@ -12,10 +12,10 @@
 C_LINKAGE_BEGIN
 
 #define VK_CHECK(call)                                                                                                                     \
-    if (call != VK_SUCCESS) {                                                                                                              \
-        fprintf(stderr, "Vulkan call failed at %s:%d\n", __FILE__, __LINE__);                                                              \
-        exit(1);                                                                                                                           \
-    }
+  if (call != VK_SUCCESS) {                                                                                                                \
+    fprintf(stderr, "Vulkan call failed at %s:%d\n", __FILE__, __LINE__);                                                                  \
+    exit(1);                                                                                                                               \
+  }
 
 typedef struct Device         Device;
 typedef struct Swapchain      Swapchain;
@@ -29,81 +29,81 @@ typedef struct Pipeline       Pipeline;
 typedef struct Buffer         Buffer;
 
 struct Device {
-    VkDevice handle;
-    VkQueue  graphics_queue;
-    uint32_t graphics_queue_index;
+  VkDevice handle;
+  VkQueue  graphics_queue;
+  uint32_t graphics_queue_index;
 };
 
 struct Swapchain {
-    VkSwapchainKHR     handle;
-    VkSurfaceKHR       surface;
-    Device            *ldevice;
-    VkPhysicalDevice   pdevice;
-    VkSurfaceFormatKHR format;
+  VkSwapchainKHR     handle;
+  VkSurfaceKHR       surface;
+  Device            *ldevice;
+  VkPhysicalDevice   pdevice;
+  VkSurfaceFormatKHR format;
 
-    U32 image_count;
-    U32 semaphore_count;
+  U32 image_count;
+  U32 semaphore_count;
 
-    VkImage              *images;
-    VkImageView          *image_views;
-    VkImageMemoryBarrier *barriers;
-    VkSemaphore          *read_semaphores;
-    VkSemaphore          *write_semaphores;
-    VkFence              *fences;
+  VkImage              *images;
+  VkImageView          *image_views;
+  VkImageMemoryBarrier *barriers;
+  VkSemaphore          *read_semaphores;
+  VkSemaphore          *write_semaphores;
+  VkFence              *fences;
 
-    U32 width;
-    U32 height;
-    U32 current_semaphore;
-    U32 current_image;
+  U32 width;
+  U32 height;
+  U32 current_semaphore;
+  U32 current_image;
 };
 
 struct Image {
-    VkImage        handle;
-    VkImageView    view;
-    VkDeviceMemory memory;
-    VkFormat       format;
+  VkImage        handle;
+  VkImageView    view;
+  VkDeviceMemory memory;
+  VkFormat       format;
 };
 
 struct Texture {
-    Image                 image;
-    VkDescriptorImageInfo descriptor;
+  Image                 image;
+  VkDescriptorImageInfo descriptor;
 };
 
 struct Framebuffers {
-    VkFramebuffer *handles;
-    U32            count;
+  VkFramebuffer *handles;
+  U32            count;
 };
 
 struct CommandBuffers {
-    VkCommandBuffer *handles;
-    U32              count;
+  VkCommandBuffer *handles;
+  U32              count;
 };
 
 struct DescriptorSet {
-    VkDescriptorSet       handle;
-    VkDescriptorSetLayout layout;
-    VkDescriptorPool      pool;
+  VkDescriptorSet       handle;
+  VkDescriptorSetLayout layout;
+  VkDescriptorPool      pool;
 };
 
 struct Shader {
-    const char *path;
-    uint32_t    stage;
+  const char *path;
+  uint32_t    stage;
 };
 
 struct Pipeline {
-    VkPipeline                         handle;
-    VkPipelineLayout                   layout;
-    VkPipelineShaderStageCreateInfo   *shader_stages;
-    U32                                shader_count;
-    VkVertexInputBindingDescription   *binding_descriptions;
-    U32                                binding_description_count;
-    VkVertexInputAttributeDescription *attribute_descriptions;
-    U32                                attribute_description_count;
+  VkPipeline                         handle;
+  VkPipelineLayout                   layout;
+  VkPipelineShaderStageCreateInfo   *shader_stages;
+  U32                                shader_count;
+  VkVertexInputBindingDescription   *binding_descriptions;
+  U32                                binding_description_count;
+  VkVertexInputAttributeDescription *attribute_descriptions;
+  U32                                attribute_description_count;
 };
 
 struct Buffer {
-    VkBuffer       handle;
-    VkDeviceMemory memory;
+  VkBuffer       handle;
+  VkDeviceMemory memory;
 };
 
 VkInstance vulkan_instance_create(const char *name, int version, const char **extensions, U32 extension_count, const char **layers,
@@ -148,8 +148,8 @@ Texture texture_from_pixels(U32 width, U32 height, U32 channels, VkFormat format
                             VkPhysicalDevice pdevice, Device *ldevice, VkCommandPool cmd_pool);
 void    texture_destroy(Texture *t, Device *ldevice);
 
-void  image_transition_layout(Image *image, VkImageLayout old_layout, VkImageLayout new_layout, VkImageAspectFlags aspect_mask,
-                              VkCommandBuffer cmd_buf);
+void image_transition_layout(Image *image, VkImageLayout old_layout, VkImageLayout new_layout, VkImageAspectFlags aspect_mask,
+                             VkCommandBuffer cmd_buf);
 
 VkRenderPass render_pass_create_present(VkFormat color_format, VkFormat depth_format, Device *ldevice);
 VkRenderPass render_pass_create_offscreen(VkFormat color_format, VkFormat depth_format, Device *ldevice);
@@ -178,17 +178,17 @@ void   buffer_destroy(Buffer *buffer, Device *ldevice);
 static inline U32
 memory_type_find(VkPhysicalDevice pdevice, U32 type_bits, VkMemoryPropertyFlags flags)
 {
-    VkPhysicalDeviceMemoryProperties memory_properties;
-    vkGetPhysicalDeviceMemoryProperties(pdevice, &memory_properties);
+  VkPhysicalDeviceMemoryProperties memory_properties;
+  vkGetPhysicalDeviceMemoryProperties(pdevice, &memory_properties);
 
-    for (U32 i = 0; i < memory_properties.memoryTypeCount; ++i) {
-        if ((type_bits & (1 << i)) && (memory_properties.memoryTypes[i].propertyFlags & flags) == flags) {
-            return i;
-        }
+  for (U32 i = 0; i < memory_properties.memoryTypeCount; ++i) {
+    if ((type_bits & (1 << i)) && (memory_properties.memoryTypes[i].propertyFlags & flags) == flags) {
+      return i;
     }
+  }
 
-    // @Todo error handling
-    return 0;
+  // @Todo error handling
+  return 0;
 }
 
 C_LINKAGE_END

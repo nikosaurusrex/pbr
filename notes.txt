@@ -1,3 +1,5 @@
-make the first parameter of function calls the object I want to act on
 get rid of malloc and frees and use arenas and other options
 refactor error handling
+
+fix resizing of window
+fixing cleanup when exiting program

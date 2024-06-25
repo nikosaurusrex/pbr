@@ -9,9 +9,9 @@ AlignOperands: 'true'
 AllowShortFunctionsOnASingleLine: None
 AlwaysBreakAfterReturnType: AllDefinitions
 BreakBeforeBraces: Linux
-IndentWidth: '4'
+IndentWidth: '2'
 SpacesInParentheses: 'false'
-TabWidth: '4'
+TabWidth: '2'
 ColumnLimit: 140
 
 ...

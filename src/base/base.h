@@ -66,11 +66,11 @@ typedef int32_t  B32;
 
 #if BUILD_DEBUG
 #define Assert(x)                                                                                                                          \
-    do {                                                                                                                                   \
-        if (!(x)) {                                                                                                                        \
-            DebugBreak();                                                                                                                  \
-        }                                                                                                                                  \
-    } while (0)
+  do {                                                                                                                                     \
+    if (!(x)) {                                                                                                                            \
+      DebugBreak();                                                                                                                        \
+    }                                                                                                                                      \
+  } while (0)
 #else
 #define Assert(x) ((void)0)
 #endif
